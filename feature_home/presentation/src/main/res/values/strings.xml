@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="selected_currency">Selected Currency:</string>
+    <string name="change">Change</string>
+    <string name="cancel">Cancel</string>
+    <string name="income">Income</string>
+    <string name="expenses">Expenses</string>
+    <string name="paid">Paid:</string>
+    <string name="unpaid">Unpaid:</string>
+    <string name="rent_percent">Rent Percent:</string>
+    <string name="profit">Profit</string>
+    <string name="loss">Loss</string>
+    <string name="payment">Payment</string>
+    <string name="for_1_night">For 1 night</string>
+    <string name="nights">Nights</string>
+    <string name="for_all_nights">For all nights</string>
+    <string name="name">Name</string>
+    <string name="phone">Phone</string>
+    <string name="comment">Comment</string>
+    <string name="add_new_guest">Add New Guest</string>
+</resources>
