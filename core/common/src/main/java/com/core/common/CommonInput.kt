@@ -104,3 +104,43 @@ fun NumberInput(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
     )
 }
+
+@Composable
+fun NameInput(
+    modifier: Modifier = Modifier,
+    text: String = "",
+    onTextChanged: (String) -> Unit,
+    onCancelClicked: () -> Unit
+) {
+    OutlinedTextField(
+        modifier = modifier,
+        value = text,
+        onValueChange = onTextChanged,
+        shape = MaterialTheme.shapes.small,
+        placeholder = { Text(
+            text= stringResource(R.string.name),
+            color = MaterialTheme.colorScheme.outline
+        ) },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = "Search",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+        trailingIcon = {
+            if(text!=""){
+                IconButton(
+                    modifier = Modifier,
+                    onClick = onCancelClicked,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color.Transparent
+                    )
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_cancel_24),
+                        contentDescription = "Cancel",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    )
+}

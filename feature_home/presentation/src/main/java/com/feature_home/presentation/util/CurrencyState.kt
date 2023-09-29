@@ -1,4 +1,4 @@
-package com.feature_home.presentation.home.util
+package com.feature_home.presentation.util
 
 import java.util.Currency
 

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -164,17 +169,33 @@ fun MoneyText(
 fun IconCard(
     modifier: Modifier=Modifier,
     icon: ImageVector,
-    onCardClick: () -> Unit
+    onCardClick: () -> Unit = { },
+    supportingText: String = "",
+    isSelected: Boolean = false
 ) {
     EmptyContainer(
         modifier = modifier.clickable{
             onCardClick()
         }
     ){
-        CircleIcon(
-            backgroundColor=MaterialTheme.colorScheme.onSurface,
-            icon=icon
-        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            CircleIcon(
+                backgroundColor=if(isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                icon=icon
+            )
+            if(supportingText.isNotBlank()){
+                Text(
+                    text=supportingText,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if(isSelected) MaterialTheme.colorScheme.primary else  MaterialTheme.colorScheme.onBackground
+                )
+            }
+
+        }
+
     }
 }
 
@@ -208,8 +229,37 @@ fun CustomSelectableBtn(
     }
 }
 
+
+
 @Composable
 fun AddValueWidget(
+    modifier: Modifier = Modifier,
+    onAddBtnClick: (String) -> Unit
+) {
+    var text by remember{ mutableStateOf("") }
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ){
+        NumberInput(
+            text = text,
+            onTextChanged={
+                text = it
+            },
+            onCancelClicked={
+                text=""
+            }
+        )
+        IconButton(onClick = { if(text.isNotBlank()) onAddBtnClick(text)}) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+        }
+    }
+}
+
+@Composable
+fun AddNameWidget(
     modifier: Modifier = Modifier,
     text: String = "",
     onTextChanged: (String) -> Unit,
@@ -222,7 +272,7 @@ fun AddValueWidget(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ){
-        NumberInput(
+        NameInput(
             text = text,
             onTextChanged=onTextChanged,
             onCancelClicked=onCancelClicked
@@ -232,6 +282,7 @@ fun AddValueWidget(
         }
     }
 }
+
 
 @Preview
 @Composable

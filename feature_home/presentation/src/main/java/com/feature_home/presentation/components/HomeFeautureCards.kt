@@ -1,13 +1,12 @@
 package com.feature_home.presentation.components
 
-import android.icu.text.IDNA
+
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +24,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.core.common.CircleIcon
 import com.core.common.EmptyContainer
+import com.core.common.IconCard
 import com.core.common.MarkedInfoDisplay
 import com.core.common.MoneyText
 import com.feature_home.presentation.R
@@ -50,7 +50,7 @@ fun RentPercentWidget(
 @Composable
 fun FinResultFlatCard(
     modifier:Modifier= Modifier,
-    icon: ImageVector,
+    icon: ImageVector?=null,
     title: String,
     paid_amount: Int,
     unpaid_amount: Int,
@@ -68,10 +68,12 @@ fun FinResultFlatCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ){
-                CircleIcon(
-                    backgroundColor = MaterialTheme.colorScheme.onSurface,
-                    icon = icon
-                )
+                if(icon!=null){
+                    CircleIcon(
+                        backgroundColor = MaterialTheme.colorScheme.onSurface,
+                        icon = icon
+                    )
+                }
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     horizontalAlignment = Alignment.Start
@@ -89,7 +91,6 @@ fun FinResultFlatCard(
                         else MaterialTheme.colorScheme.errorContainer
                     )
                 }
-
             }
             Row(
                 verticalAlignment = Alignment.Top,
@@ -131,15 +132,17 @@ fun FinResultFlatCard(
                         currency= currency
                     )
                 }
-
-                RentPercentWidget(
-                    rent_percent = rent_percent
-                )
-
-
+            }
+            RentPercentWidget(
+                rent_percent = rent_percent
+            )
         }
     }
 }
+
+
+
+
 
 @Composable
 fun FinResultCatCard(
@@ -147,7 +150,6 @@ fun FinResultCatCard(
     icon: ImageVector,
     amount: Int,
     currency: Currency,
-    onTrendBtnClick: () -> Unit,
     trend_Percent: Int
 ) {
     EmptyContainer(modifier=modifier){
@@ -177,7 +179,7 @@ fun FinResultCatCard(
                     )
                 }
                 Button(
-                    onClick = onTrendBtnClick,
+                    onClick = { },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent
                     )
@@ -198,6 +200,7 @@ fun FinResultCatCard(
         }}
 }
 
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FlatCard(
@@ -205,9 +208,13 @@ fun FlatCard(
     title: String,
     amount: Int,
     currency: Currency,
-    listInfo: List<String>
+    listInfo: List<String>,
+    rent_percent: Float,
+    onCardClick: () -> Unit
 ) {
-    EmptyContainer(modifier=modifier){
+    EmptyContainer(modifier=modifier.clickable{
+        onCardClick()
+    }){
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
@@ -242,7 +249,7 @@ fun FlatCard(
                 rent_percent = rent_percent
             )
         }}
-}}
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -253,9 +260,12 @@ fun GuestCard(
     amount: Int,
     currency: Currency,
     is_paid: Boolean,
-    onPaidSwitchChange: (Boolean) -> Unit
+    onPaidSwitchChange: (Boolean) -> Unit,
+    onCardClick: () -> Unit
 ) {
-    EmptyContainer(modifier=modifier){
+    EmptyContainer(modifier=modifier.clickable {
+        onCardClick()
+    }){
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
@@ -302,3 +312,44 @@ fun GuestCard(
     }
 }
 
+@Composable
+fun TransactionCard(
+    modifier:Modifier= Modifier,
+    title: String,
+    amount: Int,
+    currency: Currency,
+    icon: ImageVector
+) {
+    EmptyContainer(modifier=modifier){
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.Start
+        ){
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                IconCard(icon = icon)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text=title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    MoneyText(
+                        amount = amount,
+                        currency = currency,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if(amount>0) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.errorContainer
+                    )
+                }
+
+            }
+        }
+    }
+}

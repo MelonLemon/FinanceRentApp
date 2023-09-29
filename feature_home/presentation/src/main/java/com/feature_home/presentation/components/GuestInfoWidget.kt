@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -27,11 +28,13 @@ fun GuestInfoWidget(
     for_night:Int,
     for_all_nights:Int,
     number_of_nights: Int,
+    is_paid: Boolean,
     onForNightChange: (String) -> Unit,
     onForAllNightsChange: (String) -> Unit,
     onNameChange: (String) -> Unit,
     onPhoneChange: (String) -> Unit,
     onCommentChange: (String) -> Unit,
+    onPaidSwitchChange: (Boolean) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -86,5 +89,18 @@ fun GuestInfoWidget(
             prefix = { Text(text= stringResource(R.string.for_all_nights) + ":") },
             textStyle = MaterialTheme.typography.titleMedium
         )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Switch(
+                checked = is_paid,
+                onCheckedChange = onPaidSwitchChange)
+            Text(
+                text=if(is_paid) stringResource(R.string.paid) else stringResource(R.string.paid),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
     }
 }
