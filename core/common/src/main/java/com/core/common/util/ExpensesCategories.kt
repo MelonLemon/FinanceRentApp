@@ -1,8 +1,9 @@
-package com.feature_home.presentation.util
+package com.core.common.util
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import com.feature_home.presentation.R
+import com.core.common.R
+
 
 enum class ExpensesCategories(val id: Int, @StringRes val category: Int, @DrawableRes val icon: Int) {
     HOUSING(1, R.string.housing, R.drawable.baseline_house_24),

@@ -1,7 +1,8 @@
 package com.feature_home.presentation.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
@@ -13,22 +14,18 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.dp
-import com.core.common.AddValueWidget
-import com.core.common.IconCard
+import com.core.common.components.AddValueWidget
+import com.core.common.components.IconCard
+import com.core.common.components.MonthYearDisplay
 import com.feature_home.domain.model.SectionInfo
+import java.time.YearMonth
 import java.util.Currency
 
+@RequiresApi(Build.VERSION_CODES.O)
 fun LazyListScope.sectionBlock(
     sectionInfo: SectionInfo,
     currency: Currency,
@@ -36,7 +33,9 @@ fun LazyListScope.sectionBlock(
     isIncomeSelected: Boolean,
     onIncomeExpClick: (Boolean) -> Unit,
     onCategoryClick: (Int) -> Unit,
-    onAddBtnClick: (String) -> Unit
+    onAddBtnClick: (String) -> Unit,
+    selectedYearMonth: YearMonth,
+    onYearMonthClick: () -> Unit
 ){
 
     item{
@@ -104,6 +103,12 @@ fun LazyListScope.sectionBlock(
         }
     }
 
+    item {
+        MonthYearDisplay(
+          selectedYearMonth = selectedYearMonth,
+            onBtnClick = onYearMonthClick
+        )
+    }
     item{
         AddValueWidget(
             onAddBtnClick = {value->
@@ -118,7 +123,7 @@ fun LazyListScope.sectionBlock(
             "${transaction.id} + ${sectionInfo.name}"
         }
     ){transaction ->
-        val category = if(sectionInfo.isIncomeSelected) sectionInfo.incomeCategories.first { it.id==transaction.categoryId}
+        val category = if(transaction.isIncome) sectionInfo.incomeCategories.first { it.id==transaction.categoryId}
         else sectionInfo.expensesCategories.first { it.id==transaction.categoryId}
         TransactionCard(
             title = category.name,

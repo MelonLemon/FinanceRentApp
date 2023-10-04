@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="period">Period</string>
+    <string name="sections">Sections</string>
+    <string name="categories">Categories</string>
+    <string name="filters">Filters</string>
+    <string name="select_all">Select All</string>
+    <string name="flats">Flats</string>
+    <string name="select_all_sections">Select All Sections</string>
+    <string name="income_categories">Income Categories</string>
+    <string name="expenses_categories">Expenses Categories</string>
+    <string name="apply">Apply</string>
+</resources>

@@ -5,5 +5,6 @@ sealed class HomeUiEvents{
     object CloseNewFlatDialog: HomeUiEvents()
     object CloseSectionDialog: HomeUiEvents()
     object OpenSectionDialog: HomeUiEvents()
-
+    object CloseYearMonthDialog: HomeUiEvents()
+    object ErrorMsgUnknown: HomeUiEvents()
 }

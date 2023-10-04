@@ -1,5 +1,7 @@
-package com.core.common
+package com.core.common.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,12 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -44,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.core.designsystem.theme.RentCountAppTheme
+import java.time.YearMonth
 import java.util.Currency
 import java.util.Locale
 
@@ -67,6 +72,40 @@ fun EmptyContainer(
         }
 
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun MonthYearDisplay(
+    modifier: Modifier = Modifier,
+    selectedYearMonth: YearMonth,
+    onBtnClick: () -> Unit
+) {
+
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.Start
+    ) {
+        Row(
+            modifier = Modifier,
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(20.dp)
+        ){
+            FilledTonalButton(
+                onClick = onBtnClick
+            ) {
+                Icon(imageVector = Icons.Default.DateRange,
+                    contentDescription = null)
+                Text(text="${selectedYearMonth.month.name} ${selectedYearMonth.year}")
+
+            }
+        }
+    }
+
+
 }
 
 @Composable
@@ -125,6 +164,46 @@ fun BackToNavigationRow(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium
         )
+    }
+}
+
+@Composable
+fun CloseNavigationRow(
+    modifier: Modifier=Modifier,
+    text: String,
+    onBtnClick: () -> Unit,
+    btnText: String,
+    icon: ImageVector = Icons.Default.Close
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.primaryContainer
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ){
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = text,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Button(
+            onClick = onBtnClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent
+            )
+        ) {
+            Text(text=btnText)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint= MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
     }
 }
 

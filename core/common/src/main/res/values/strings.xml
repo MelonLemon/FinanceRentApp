@@ -5,4 +5,18 @@
     <string name="main_job">Main job</string>
     <string name="work_by_time">Work by Time</string>
     <string name="name">Name</string>
+    <string name="project_salary">Project Salary</string>
+    <string name="freelance">Freelance</string>
+    <string name="side_work">Side work</string>
+    <string name="financial">Financial</string>
+    <string name="others">Others</string>
+    <string name="housing">Housing</string>
+    <string name="transportation">Transportation</string>
+    <string name="food">Food</string>
+    <string name="utilities">Utilities</string>
+    <string name="healthcare">Healthcare</string>
+    <string name="personal_spending">Personal Spending</string>
+    <string name="entertainment">Entertainment</string>
+    <string name="cleaning_services">Cleaning Services</string>
+    <string name="flats">Flats</string>
 </resources>

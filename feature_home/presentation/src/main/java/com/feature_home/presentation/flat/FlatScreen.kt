@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,22 +24,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.core.common.AddValueWidget
-import com.core.common.BackToNavigationRow
-import com.core.common.IconCard
-import com.core.common.MoneyText
+import com.core.common.components.AddValueWidget
+import com.core.common.components.BackToNavigationRow
+import com.core.common.components.IconCard
+import com.core.common.components.MoneyText
+import com.core.common.components.MonthYearDisplay
 import com.feature_home.presentation.R
 import com.feature_home.presentation.components.FinResultFlatCard
 import com.feature_home.presentation.components.GuestCard
 import com.feature_home.presentation.components.GuestInfoDialog
 import com.feature_home.presentation.components.IncomeExpensesToggle
 import com.feature_home.presentation.components.TransactionCard
+import com.feature_home.presentation.components.YearMonthDialog
 import com.feature_home.presentation.flat.util.FlatScreenEvents
 import com.feature_home.presentation.flat.util.FlatState
 import com.feature_home.presentation.flat.util.FlatUiEvents
-import com.feature_home.presentation.home.util.HomeUiEvents
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 
@@ -50,6 +54,11 @@ fun FlatScreen(
     backToHomeScreen: () -> Unit
 ) {
     var guestDialogVisibility by remember{ mutableStateOf(false) }
+    var yearMonthDialogVisibility by remember{ mutableStateOf(false)}
+
+    //FOR LAUNCHED EFFECT
+    val snackbarHostState = remember { SnackbarHostState() }
+    val unknownError = stringResource(R.string.somethings_goes_wrong_try_again)
 
     LaunchedEffect(key1 = true){
         flatUiEvents.collectLatest { event ->
@@ -60,19 +69,30 @@ fun FlatScreen(
                 is FlatUiEvents.CloseGuestDialog -> {
                     guestDialogVisibility = false
                 }
+                is FlatUiEvents.CloseYearMonthDialog -> {
+                    guestDialogVisibility = false
+                }
+                is FlatUiEvents.ErrorMsgUnknown -> {
+                    snackbarHostState.showSnackbar(
+                        message = unknownError,
+                        actionLabel = null
+                    )
+                }
             }
         }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
         ) { innerPadding ->
-        if(flatState.flatInfo == null) {
+        if(flatState.isLoading) {
             //progressbar
         } else {
             BackToNavigationRow(
-                text=flatState.flatInfo.name,
+                text=flatState.flatName,
                 onBtnClick = {
                     backToHomeScreen()
                 }
@@ -93,14 +113,14 @@ fun FlatScreen(
                     ) {
                         Column() {
                             MoneyText(
-                                amount = flatState.finalAmount,
+                                amount = flatState.finFlatState.finalAmount,
                                 currency = flatState.currencyState.selectedCurrency,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 style = MaterialTheme.typography.headlineMedium
                             )
                             LazyRow(){
                                 items(
-                                    items = flatState.finResults,
+                                    items = flatState.finFlatState.finResults,
                                     key = {finResult ->
                                         "${finResult.month.monthValue}${finResult.month.year}"
                                     }
@@ -132,6 +152,14 @@ fun FlatScreen(
                             icon = ImageVector.vectorResource(id = R.drawable.baseline_person_add_24),
                             onCardClick = {
                                 flatEvents(FlatScreenEvents.OpenNewGuestDialog)
+                            }
+                        )
+                    }
+                    item {
+                        MonthYearDisplay(
+                            selectedYearMonth = flatState.yearMonth,
+                            onBtnClick = {
+                                yearMonthDialogVisibility = true
                             }
                         )
                     }
@@ -178,6 +206,15 @@ fun FlatScreen(
                         )
                     }
 
+                    item {
+                        MonthYearDisplay(
+                            selectedYearMonth = flatState.yearMonth,
+                            onBtnClick = {
+                                yearMonthDialogVisibility = true
+                            }
+                        )
+                    }
+
                     item{
                         AddValueWidget(
                             onAddBtnClick = {amountString->
@@ -220,6 +257,18 @@ fun FlatScreen(
             },
             fullGuestInfo = flatState.guestDialogGuestInfo,
             listDates = flatState.listRentDates
+        )
+    }
+
+    if(yearMonthDialogVisibility){
+        YearMonthDialog(
+            selectedYearMonth = flatState.yearMonth,
+            onCancel = {
+                yearMonthDialogVisibility = false
+            },
+            onAgree = {newYearMonth ->
+                flatEvents(FlatScreenEvents.OnYearMonthChange(newYearMonth))
+            }
         )
     }
 }

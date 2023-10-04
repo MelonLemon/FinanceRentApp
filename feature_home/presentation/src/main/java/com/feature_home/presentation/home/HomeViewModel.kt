@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.feature_home.domain.model.FinResultsFlat
+import com.feature_home.domain.model.FinState
 import com.feature_home.domain.model.SectionInfo
 import com.feature_home.domain.use_cases.HomeUseCases
 import com.feature_home.presentation.home.util.HomeScreenEvents
@@ -29,7 +30,10 @@ class HomeViewModel  @Inject constructor(
 
     private val _homeState = MutableStateFlow((HomeState(
         yearMonth = currentMonth,
-        finResultFlat = FinResultsFlat(month=currentMonth)
+        listOfYears = (currentMonth.year-5..currentMonth.year+5).toList(),
+        finState = FinState(
+            finResultFlat = FinResultsFlat(month=currentMonth)
+        )
     )))
 
     val homeState  = _homeState.asStateFlow()
@@ -37,10 +41,30 @@ class HomeViewModel  @Inject constructor(
     private val _onHomeUiEvents = MutableSharedFlow<HomeUiEvents>()
     val onHomeUiEvents  = _onHomeUiEvents.asSharedFlow()
 
+    init{
+        viewModelScope.launch {
+            val finState = useCases.getFinResults()
+            val listOfFlat = useCases.getFlatsInfo()
+            val listOfSections = useCases.getSectionsInfo()
+            _homeState.value = homeState.value.copy(
+                finState=finState,
+                listOfFlat=listOfFlat,
+                listOfSections=listOfSections,
+                isLoading = false
+            )
+        }
+    }
     fun homeScreenEvents(event: HomeScreenEvents){
         when(event) {
-            is HomeScreenEvents.OnYearChange -> {
-
+            is HomeScreenEvents.OnYearMonthChange -> {
+                viewModelScope.launch {
+                    val newList = useCases.getUpdatedTransactions(yearMonth=event.yearMonth, listOfSections = homeState.value.listOfSections)
+                    _homeState.value = homeState.value.copy(
+                        yearMonth = event.yearMonth,
+                        listOfSections = newList
+                    )
+                    _onHomeUiEvents.emit(HomeUiEvents.CloseYearMonthDialog)
+                }
             }
             is HomeScreenEvents.OnCurrencyChange -> {
                 //Do Change of Amount according Currency
@@ -55,14 +79,30 @@ class HomeViewModel  @Inject constructor(
             }
             is HomeScreenEvents.OnNewFlatAdd -> {
                 viewModelScope.launch {
-                    //Add Flat
-                    _onHomeUiEvents.emit(HomeUiEvents.CloseNewFlatDialog)
+                    val (result, flats) = useCases.addNewFlat(name=event.name, city=event.city)
+                    if(result && flats!=null){
+                        _homeState.value = homeState.value.copy(
+                            listOfFlat = flats
+                        )
+                        _onHomeUiEvents.emit(HomeUiEvents.CloseNewFlatDialog)
+                    } else {
+                        _onHomeUiEvents.emit(HomeUiEvents.ErrorMsgUnknown)
+                    }
+
                 }
             }
             is HomeScreenEvents.OnSectionAddEdit -> {
                 viewModelScope.launch {
-                    //Add Edit Section
-                    _onHomeUiEvents.emit(HomeUiEvents.CloseSectionDialog)
+                    val (result, sections) = useCases.addEditSection(sectionInfo = event.sectionInfo)
+                    if(result && sections!=null){
+                        _homeState.value = homeState.value.copy(
+                            listOfSections = sections
+                        )
+                        _onHomeUiEvents.emit(HomeUiEvents.CloseSectionDialog)
+                    } else {
+                        _onHomeUiEvents.emit(HomeUiEvents.ErrorMsgUnknown)
+                    }
+
                 }
             }
             is HomeScreenEvents.OpenNewSectionDialog -> {
@@ -104,7 +144,17 @@ class HomeViewModel  @Inject constructor(
                 )
             }
             is HomeScreenEvents.OnTransactionAdd -> {
-                // Add transaction
+                viewModelScope.launch {
+                    val (result, sections) = useCases.addTransaction(sectionId = event.sectionId, transaction = event.transaction)
+                    if(result && sections!=null){
+                        _homeState.value = homeState.value.copy(
+                            listOfSections = sections
+                        )
+                    } else {
+                        _onHomeUiEvents.emit(HomeUiEvents.ErrorMsgUnknown)
+                    }
+                }
+
             }
         }
     }

@@ -22,11 +22,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import com.core.common.CircleIcon
-import com.core.common.EmptyContainer
-import com.core.common.IconCard
-import com.core.common.MarkedInfoDisplay
-import com.core.common.MoneyText
+import com.core.common.components.CircleIcon
+import com.core.common.components.EmptyContainer
+import com.core.common.components.IconCard
+import com.core.common.components.MarkedInfoDisplay
+import com.core.common.components.MoneyText
 import com.feature_home.presentation.R
 import java.util.Currency
 

@@ -16,6 +16,17 @@ data class FullGuestInfo(
     val for_all_nights:Int=0,
     val is_paid: Boolean = false
 )
+
+data class FinState(
+    val finalAmount: Int =0,
+    val finResultFlat: FinResultsFlat,
+    val finResultsSections: List<FinResultsSection> = emptyList()
+)
+
+data class FinFlatState(
+    val finResults: List<FinResultsFlat> = emptyList(),
+    val finalAmount: Int =0,
+)
 data class FlatInfo(
     val id: Int,
     val name: String,
@@ -59,6 +70,7 @@ data class FinCategory(
 
 data class Transaction(
     val id: Int?,
+    val isIncome: Boolean,
     val categoryId: Int,
     val amount: Int
 )

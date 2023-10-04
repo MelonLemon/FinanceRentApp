@@ -1,7 +1,8 @@
 package com.feature_transactions.domain.di
 
 import com.feature_transactions.domain.repository.TransactionRepository
-import com.feature_transactions.domain.use_cases.GetTransactions
+import com.feature_transactions.domain.use_cases.GetSearchedTransactions
+import com.feature_transactions.domain.use_cases.GetFilteredTransactions
 import com.feature_transactions.domain.use_cases.TransactionUseCases
 import dagger.Module
 import dagger.Provides
@@ -17,7 +18,8 @@ object TransactionModule {
     @Singleton
     fun provideBookingUseCases(repository: TransactionRepository): TransactionUseCases {
         return TransactionUseCases(
-            getTransactions = GetTransactions(repository)
+            getFilteredTransactions = GetFilteredTransactions(repository),
+            getSearchedTransactions = GetSearchedTransactions()
         )
     }
 }
