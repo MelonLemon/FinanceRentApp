@@ -2,6 +2,8 @@ package com.core.data.di
 
 import android.app.Application
 import androidx.room.Room
+import com.core.data.data_source.DatabaseInitializer
+import com.core.data.data_source.RentCountDao
 import com.core.data.data_source.RentCountDatabase
 import com.core.data.repository.AnalyticsRepositoryImpl
 import com.core.data.repository.HomeRepositoryImpl
@@ -13,6 +15,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -22,14 +25,22 @@ object DataModule {
     @Provides
     @Singleton
     fun provideRentDatabase(
-        app: Application
+        app: Application,
+        rentCountProvider: Provider<RentCountDao>
     ): RentCountDatabase {
         return Room.databaseBuilder(
             app,
             RentCountDatabase::class.java,
             RentCountDatabase.DATABASE_NAME
+        ).addCallback(
+            DatabaseInitializer(rentCountProvider)
         ).build()
     }
+
+
+    @Provides
+    @Singleton
+    fun provideCatalogueDao(db: RentCountDatabase): RentCountDao = db.rentCountDao
 
     @Provides
     @Singleton

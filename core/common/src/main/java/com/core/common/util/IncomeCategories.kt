@@ -11,7 +11,8 @@ enum class IncomeCategories(val id: Int, @StringRes val category: Int, @Drawable
     FREELANCE(3, R.string.freelance, R.drawable.baseline_brush_24),
     SIDE_JOB(4, R.string.side_work, R.drawable.baseline_directions_run_24),
     FINANCE(5, R.string.financial, R.drawable.baseline_credit_card_24),
-    OTHERS_INCOME(6,R.string.others,R.drawable.baseline_category_24 );
+    RENT_INCOME(6,R.string.rent_income,R.drawable.baseline_house_24 ),
+    OTHERS_INCOME(7,R.string.others,R.drawable.baseline_category_24 );
 
     companion object {
         private val mapIconCategories = values().associateBy ({ it.id }, { it.icon })

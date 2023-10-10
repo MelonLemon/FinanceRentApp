@@ -23,6 +23,46 @@ import java.time.YearMonth
 @Dao
 interface RentCountDao {
 
+    //DATABASE INITIALIZING
+    @Transaction
+    suspend fun addBasic(
+        name: String,
+        blockCategory: String,
+        incomeCategories: List<FinCategory>?,
+        expCategories: List<FinCategory>?,
+    ){
+        val blockId = addNewBlock(
+            Blocks(
+                blockId = null,
+                blockCategory = blockCategory,
+                name = name
+            )
+        ).toInt()
+
+        incomeCategories?.forEach { category->
+            addNewCategory(
+                Categories(
+                    categoryId = null,
+                    blockId = blockId,
+                    standardCategoryId = category.standard_category_id,
+                    isIncome = true,
+                    name = category.name
+                )
+            )
+        }
+        expCategories?.forEach { category->
+            addNewCategory(
+                Categories(
+                    categoryId = null,
+                    blockId = blockId,
+                    standardCategoryId = category.standard_category_id,
+                    isIncome = false,
+                    name = category.name
+                )
+            )
+        }
+    }
+
     //BLOCKS
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addNewBlock(block: Blocks): Long

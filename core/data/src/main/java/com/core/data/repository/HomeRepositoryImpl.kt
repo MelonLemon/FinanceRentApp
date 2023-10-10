@@ -3,6 +3,8 @@ package com.core.data.repository
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.util.toRange
+import com.core.common.util.ExpensesCategories
+import com.core.common.util.IncomeCategories
 import com.core.common.util.listLongDates
 import com.core.common.util.toLocalDate
 import com.core.data.data_source.Blocks
@@ -54,11 +56,37 @@ class HomeRepositoryImpl @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun addNewFlat(name: String): List<FlatInfo> {
-        dao.addNewBlock(
-            Blocks(
-                blockId = null,
-                blockCategory = FLAT_CATEGORY,
-                name = name
+        dao.addBasic(
+            name = name,
+            blockCategory = FLAT_CATEGORY,
+            incomeCategories = listOf(
+                FinCategory(
+                    id = 1,
+                    standard_category_id = IncomeCategories.RENT_INCOME.id,
+                    name = IncomeCategories.RENT_INCOME.name
+                )
+            ),
+            expCategories = listOf(
+                FinCategory(
+                    id = 2,
+                    standard_category_id = ExpensesCategories.HOUSING.id,
+                    name = ExpensesCategories.HOUSING.name
+                ),
+                FinCategory(
+                    id = 3,
+                    standard_category_id = ExpensesCategories.UTILITIES.id,
+                    name =  ExpensesCategories.UTILITIES.name
+                ),
+                FinCategory(
+                    id = 4,
+                    standard_category_id = ExpensesCategories.CLEANING_SERVICES.id,
+                    name = ExpensesCategories.CLEANING_SERVICES.name
+                ),
+                FinCategory(
+                    id = 4,
+                    standard_category_id = ExpensesCategories.OTHERS.id,
+                    name = ExpensesCategories.OTHERS.name
+                )
             )
         )
         return getFlatsInfo()
@@ -163,7 +191,7 @@ class HomeRepositoryImpl @Inject constructor(
         val listOfFlatInfo = mutableListOf<FlatInfo>()
 
         blocks.forEach { flat ->
-            val numberOfNights = guests[flat.blockId!!]?.sumOf { it.nights } ?:0
+            val numberOfNights = guests[flat.blockId!!]?.sumOf { it.nights } ?:0  // change later
             val rentPercent = if(numberOfNights==0) 0f else  (numberOfNights/daysInMonths).toFloat()
             listOfFlatInfo.add(
                 FlatInfo(
