@@ -46,6 +46,7 @@ import com.feature_transactions.presentation.components.transactionDay
 import com.feature_transactions.presentation.util.TransactionScreenEvents
 import com.feature_transactions.presentation.util.TransactionState
 import kotlinx.coroutines.launch
+import java.time.Month
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -57,8 +58,6 @@ fun TransactionScreen(
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
-    val incomeCategories = IncomeCategories.values()
-    val expensesCategories = ExpensesCategories.values()
     var filterModalSheetVisibility by remember{ mutableStateOf(false) }
     
     
@@ -115,7 +114,7 @@ fun TransactionScreen(
 
             } else {
                 transactionState.transactionsByMonth.forEach { month ->
-                    val showMonth = month.yearMonth.monthValue in transactionState.filterState.periodFilterState.months
+                    val showMonth = month.month in transactionState.filterState.periodFilterState.months
                     if(showMonth){
 
                         item {
@@ -123,7 +122,7 @@ fun TransactionScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ){
-                                Text(text=month.yearMonth.month.name)
+                                Text(text= Month.of(month.month).name)
                                 MoneyText(amount = month.amount, currency = month.currency)
                             }
                         }
@@ -132,9 +131,7 @@ fun TransactionScreen(
                         month.daysList.forEach { days ->
                             transactionDay(
                                 title = days.date.format(format) ?: pattern,
-                                listOfItems = days.transactions,
-                                incomeCategories = incomeCategories,
-                                expensesCategories = expensesCategories
+                                listOfItems = days.transactions
                             )
                         }
                     }

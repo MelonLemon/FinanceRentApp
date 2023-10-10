@@ -1,8 +1,10 @@
 package com.feature_transactions.presentation.util
 
 import com.core.common.util.SimpleItem
+import com.feature_transactions.domain.model.CategoriesFilter
 
 data class FilterState(
+    val categoriesFilterList: List<CategoriesFilter> = emptyList(),
     val periodFilterState: PeriodFilterState,
     val sectionsFilterState: SectionsFilterState=SectionsFilterState(),
     val categoryFilterState: CategoryFilterState=CategoryFilterState()
@@ -20,6 +22,8 @@ data class SectionsFilterState(
     val listOfSelectedSecIds: List<Int> = emptyList(),
     val isAllSelected: Boolean = true,
     val isFlatSelected: Boolean = true,
+    val listOfFlats: List<SimpleItem> = emptyList(),
+    val listOfSelectedFlatIds: List<Int> = emptyList(),
     val isAllSectionsSelected: Boolean = true
 )
 

@@ -25,12 +25,11 @@ import com.core.common.util.ExpensesCategories
 import com.core.common.util.IncomeCategories
 import com.feature_transactions.domain.model.TransactionListItem
 import java.util.Currency
+import java.util.Locale
 
 fun LazyListScope.transactionDay(
     title:String,
-    listOfItems: List<TransactionListItem>,
-    incomeCategories: Array<IncomeCategories>,
-    expensesCategories: Array<ExpensesCategories>
+    listOfItems: List<TransactionListItem>
 ){
     item {
         Text(
@@ -44,16 +43,14 @@ fun LazyListScope.transactionDay(
             "title"+index+item.id
         }
     ){ index, item ->
-
+        val icon = if(item.isIncome) IncomeCategories.getIcon(item.standard_category_id) else
+            ExpensesCategories.getIcon(item.standard_category_id)
         TransactionRow(
             categoryName = item.categoryName,
             comment = item.comment,
             amount = item.amount,
-            currency = item.currency,
-            icon = if(item.isIncome) incomeCategories.find{it.id==item.categoryId}
-                ?.let { ImageVector.vectorResource(id = it.icon) } ?: Icons.Default.Info
-        else expensesCategories.find{it.id==item.categoryId}
-                ?.let { ImageVector.vectorResource(id = it.icon) } ?: Icons.Default.Info
+            currency = Currency.getInstance(Locale.US), // item.currency -> Change
+            icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info
         )
         if(index<listOfItems.lastIndex){
             Divider(

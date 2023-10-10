@@ -65,10 +65,10 @@ class FlatViewModel@Inject constructor(
         emptyList()
     )
 
-    private val finFlatState = useCases.getFinFlatState(flatId = flatId).stateIn(
+    private val finResults = useCases.getFinFlatState(flatId = flatId).stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        FinFlatState()
+        emptyList()
     )
 
     private val listRentDates = useCases.getListRentDates(flatId = flatId).stateIn(
@@ -77,13 +77,14 @@ class FlatViewModel@Inject constructor(
         emptyList()
     )
 
-    val flatState  = combine(independentFlatState, guests, transactionsDisplay, finFlatState, listRentDates){ independentFlatState, guests, transactionsDisplay, finFlatState, listRentDates ->
+    val flatState  = combine(independentFlatState, guests, transactionsDisplay, finResults, listRentDates){ independentFlatState, guests, transactionsDisplay, finResults, listRentDates ->
         FlatState(
             isLoading = independentFlatState.isLoading,
             flatName = independentFlatState.flatName,
             yearMonth = yearMonth.value,
             listOfYears = independentFlatState.listOfYears,
-            finFlatState = finFlatState,
+            finalAmount = finResults.sumOf { it.paid_amount + it.expenses_amount },
+            finResults = finResults,
             guests = guests,
             listRentDates = listRentDates,
             guestDialogGuestInfo = independentFlatState.guestDialogGuestInfo,
@@ -107,14 +108,14 @@ class FlatViewModel@Inject constructor(
     init {
 
         viewModelScope.launch {
-            val flatInfo = useCases.getFlatInfoById(flatId=flatId)
+            val flatName = useCases.getFlatNameById(flatId=flatId)
             val expensesCategories = useCases.getExpensesCategories(flatId=flatId)
             if(expensesCategories.isEmpty()) throw Exception("Expenses Categories can't be Empty")
             _independentFlatState.value = independentFlatState.value.copy(
                 isLoading = false,
-                flatName = flatInfo.name,
+                flatName = flatName,
                 expensesCategories = expensesCategories,
-                selectedCategoryId = expensesCategories[0].id
+                selectedCategoryId = expensesCategories[0].id,
             )
         }
 
@@ -138,7 +139,8 @@ class FlatViewModel@Inject constructor(
                     val result = useCases.updatePaidStatusGuest(
                         flatId = flatId,
                         guestId = event.id,
-                        status = event.is_paid
+                        status = event.is_paid,
+                        currency_name = flatState.value.currencyState.selectedCurrency.displayName,
                     )
                     if(!result){
                         _onFlatUiEvents.emit(FlatUiEvents.ErrorMsgUnknown)
@@ -164,11 +166,20 @@ class FlatViewModel@Inject constructor(
             }
             is FlatScreenEvents.OnGuestAddEdit -> {
                 viewModelScope.launch {
-                    val result = useCases.addEditGuest(
-                        flatId = flatId,
-                        fullGuestInfo = event.guestInfo,
-                        month = flatState.value.yearMonth
-                    )
+
+                    val result = if(event.guestInfo.id==null)
+                        useCases.addNewGuest(
+                            flatId = flatId,
+                            fullGuestInfo = event.guestInfo,
+                            currency_name = flatState.value.currencyState.selectedCurrency.displayName,
+                            month = flatState.value.yearMonth)
+                        else
+                            useCases.editGuest(
+                                flatId = flatId,
+                                fullGuestInfo = event.guestInfo,
+                                oldFullGuestInfo = flatState.value.guestDialogGuestInfo,
+                                currency_name = flatState.value.currencyState.selectedCurrency.displayName,
+                                month = flatState.value.yearMonth)
 
                     if(!result){
                         _onFlatUiEvents.emit(FlatUiEvents.ErrorMsgUnknown)
@@ -185,7 +196,9 @@ class FlatViewModel@Inject constructor(
                     val result = useCases.addFlatExpenses(
                         flatId = flatId,
                         expensesCategoryId = flatState.value.selectedCategoryId,
-                        amount = event.amount
+                        amount = -event.amount,
+                        currency_name = flatState.value.currencyState.selectedCurrency.displayName,
+                        month = flatState.value.yearMonth
                     )
 
                     if(!result){

@@ -23,7 +23,10 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.YearMonth
+import java.util.Currency
+import java.util.Locale
 import javax.inject.Inject
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -48,6 +51,9 @@ class TransactionViewModel @Inject constructor(
     private val _searchText = MutableStateFlow("")
     private val searchText  = _searchText.asStateFlow()
 
+    private val _currency = MutableStateFlow(Currency.getInstance(Locale.US))
+    private val currency  = _currency.asStateFlow()
+
     private val _isDownloading = MutableStateFlow(true)
     private val isDownloading = _isDownloading.asStateFlow()
 
@@ -56,17 +62,18 @@ class TransactionViewModel @Inject constructor(
         useCases.getFilteredTransactions(
             year = filterState.periodFilterState.selectedYear,
             months = if(filterState.periodFilterState.isAllMonthsSelected) null else filterState.periodFilterState.months,
-            isFlatSelected = filterState.sectionsFilterState.isFlatSelected,
-            listOfSectionsId = if(filterState.sectionsFilterState.isAllSectionsSelected) null else filterState.sectionsFilterState.listOfSelectedSecIds,
-            incomeCatIds = if(filterState.categoryFilterState.isAllIncomeSelected) null else filterState.categoryFilterState.selectedIncomeCatId,
-            expensesCatIds = if(filterState.categoryFilterState.isAllExpensesSelected) null else filterState.categoryFilterState.selectedIncomeCatId
+            currency = currency.value,
+            categoriesIds = useCases.getFilteredCategoriesId(
+                categoriesFilterList = filterState.categoriesFilterList,
+                blockIds = if(filterState.sectionsFilterState.isAllSectionsSelected) null else filterState.sectionsFilterState.listOfSelectedFlatIds + filterState.sectionsFilterState.listOfSelectedSecIds,
+                selectedIncomeCatId = if(filterState.categoryFilterState.isAllIncomeSelected) null else filterState.categoryFilterState.selectedIncomeCatId,
+                selectedExpensesCatId = if(filterState.categoryFilterState.isAllExpensesSelected) null else filterState.categoryFilterState.selectedExpensesCatId
+            )
         )
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         emptyList())
-
-
 
     @OptIn(FlowPreview::class)
     private val transactionsByMonth  = searchText
@@ -94,7 +101,7 @@ class TransactionViewModel @Inject constructor(
                 if(filterState.periodFilterState.isAllMonthsSelected) {
                     transactionsByMonth.sumOf { it.amount }
                 } else {
-                    transactionsByMonth.filter { it.yearMonth.monthValue in filterState.periodFilterState.months }
+                    transactionsByMonth.filter { it.month in filterState.periodFilterState.months }
                         .sumOf { it.amount }}
             } else {
                 0
@@ -115,6 +122,22 @@ class TransactionViewModel @Inject constructor(
     )
 
     init {
+        viewModelScope.launch {
+            val categoriesFilterList = useCases.getCategoriesList()
+            val years = useCases.getYearsList()
+            val (listOfFlats, listOfSections) = useCases.getFlatsSections()
+            _filterState.value = filterState.value.copy(
+                categoriesFilterList = categoriesFilterList,
+                periodFilterState = filterState.value.periodFilterState.copy(
+                    years = years.ifEmpty { filterState.value.periodFilterState.years }
+                ),
+                sectionsFilterState = filterState.value.sectionsFilterState.copy(
+                    listOfSections = listOfFlats,
+                    listOfFlats = listOfSections
+                )
+            )
+
+        }
 
     }
 

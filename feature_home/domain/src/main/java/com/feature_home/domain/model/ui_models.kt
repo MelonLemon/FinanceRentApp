@@ -1,7 +1,6 @@
 package com.feature_home.domain.model
 
 
-import androidx.annotation.DrawableRes
 import java.time.YearMonth
 
 
@@ -30,14 +29,14 @@ data class FinFlatState(
 data class FlatInfo(
     val id: Int,
     val name: String,
-    val city: String,
     val additionalInfo: List<String>,
     val current_month_amount: Int,
     val rent_percent: Float
 )
 
 data class FinResultsFlat(
-    val month: YearMonth,
+    val year: Int,
+    val month: Int,
     val paid_amount: Int=0,
     val unpaid_amount: Int=0,
     val expenses_amount: Int=0,
@@ -46,8 +45,7 @@ data class FinResultsFlat(
 
 data class FinResultsSection(
     val id: Int,
-    val amount: Int,
-    val trend_Percent: Int
+    val amount: Int
 )
 
 data class SectionInfo(
@@ -56,19 +54,17 @@ data class SectionInfo(
     val incomeCategories: List<FinCategory> = emptyList(),
     val expensesCategories: List<FinCategory> = emptyList(),
     val isIncomeSelected: Boolean = true,
-    val selectedCategoryId:Int?=null,
-    val transactionsDisplay: List<Transaction> = emptyList()
+    val selectedCategoryId:Int=0,
+    val transactionsDisplay: List<TransactionInfo> = emptyList()
 )
-
-
 
 data class FinCategory(
     val id: Int,
-    @DrawableRes val icon: Int,
+    val standard_category_id: Int,
     val name: String
     )
 
-data class Transaction(
+data class TransactionInfo(
     val id: Int?,
     val isIncome: Boolean,
     val categoryId: Int,

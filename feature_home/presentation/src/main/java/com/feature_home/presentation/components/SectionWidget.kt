@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -21,6 +22,8 @@ import androidx.compose.ui.res.vectorResource
 import com.core.common.components.AddValueWidget
 import com.core.common.components.IconCard
 import com.core.common.components.MonthYearDisplay
+import com.core.common.util.ExpensesCategories
+import com.core.common.util.IncomeCategories
 import com.feature_home.domain.model.SectionInfo
 import java.time.YearMonth
 import java.util.Currency
@@ -76,8 +79,9 @@ fun LazyListScope.sectionBlock(
             }
 
         ){ income_category ->
+            val icon = IncomeCategories.getIcon(income_category.standard_category_id)
             IconCard(
-                icon = ImageVector.vectorResource(id = income_category.icon),
+                icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                 supportingText = income_category.name,
                 onCardClick = {
                     onCategoryClick(income_category.id)
@@ -92,8 +96,9 @@ fun LazyListScope.sectionBlock(
                 "${section.id} + ${section.name}"
             }
         ){expenses_category ->
+            val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
             IconCard(
-                icon = ImageVector.vectorResource(id = expenses_category.icon),
+                icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                 supportingText = expenses_category.name,
                 onCardClick = {
                     onCategoryClick(expenses_category.id)
@@ -125,9 +130,11 @@ fun LazyListScope.sectionBlock(
     ){transaction ->
         val category = if(transaction.isIncome) sectionInfo.incomeCategories.first { it.id==transaction.categoryId}
         else sectionInfo.expensesCategories.first { it.id==transaction.categoryId}
+        val icon = if(transaction.isIncome) IncomeCategories.getIcon(category.standard_category_id) else
+            ExpensesCategories.getIcon(category.standard_category_id)
         TransactionCard(
             title = category.name,
-            icon = ImageVector.vectorResource(id = category.icon),
+            icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
             amount = transaction.amount,
             currency = currency
         )

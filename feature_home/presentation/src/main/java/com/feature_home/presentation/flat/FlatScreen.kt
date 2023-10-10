@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -32,6 +34,8 @@ import com.core.common.components.BackToNavigationRow
 import com.core.common.components.IconCard
 import com.core.common.components.MoneyText
 import com.core.common.components.MonthYearDisplay
+import com.core.common.util.ExpensesCategories
+import com.core.common.util.IncomeCategories
 import com.feature_home.presentation.R
 import com.feature_home.presentation.components.FinResultFlatCard
 import com.feature_home.presentation.components.GuestCard
@@ -44,6 +48,7 @@ import com.feature_home.presentation.flat.util.FlatState
 import com.feature_home.presentation.flat.util.FlatUiEvents
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
+import java.time.Month
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -113,20 +118,20 @@ fun FlatScreen(
                     ) {
                         Column() {
                             MoneyText(
-                                amount = flatState.finFlatState.finalAmount,
+                                amount = flatState.finalAmount,
                                 currency = flatState.currencyState.selectedCurrency,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 style = MaterialTheme.typography.headlineMedium
                             )
                             LazyRow(){
                                 items(
-                                    items = flatState.finFlatState.finResults,
+                                    items = flatState.finResults,
                                     key = {finResult ->
-                                        "${finResult.month.monthValue}${finResult.month.year}"
+                                        "${finResult.month}${finResult.year}"
                                     }
                                 ){finResultFlat ->
                                     FinResultFlatCard(
-                                        title = finResultFlat.month.month.name,
+                                        title = Month.of(finResultFlat.month).name,
                                         paid_amount = finResultFlat.paid_amount,
                                         unpaid_amount = finResultFlat.unpaid_amount,
                                         expenses_amount = finResultFlat.expenses_amount,
@@ -196,8 +201,9 @@ fun FlatScreen(
                             "${section.id} + ${section.name}"
                         }
                     ){expenses_category ->
+                        val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
                         IconCard(
-                            icon = ImageVector.vectorResource(id = expenses_category.icon),
+                            icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                             supportingText = expenses_category.name,
                             onCardClick = {
                                 flatEvents(FlatScreenEvents.OnCategoryClick(expenses_category.id))
@@ -233,9 +239,11 @@ fun FlatScreen(
                         }
                     ){transaction ->
                         val category = flatState.expensesCategories.first { it.id==transaction.categoryId}
+                        val icon = if(transaction.isIncome) IncomeCategories.getIcon(category.standard_category_id) else
+                            ExpensesCategories.getIcon(category.standard_category_id)
                         TransactionCard(
                             title = category.name,
-                            icon = ImageVector.vectorResource(id = category.icon),
+                            icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                             amount = transaction.amount,
                             currency = flatState.currencyState.selectedCurrency,
                         )

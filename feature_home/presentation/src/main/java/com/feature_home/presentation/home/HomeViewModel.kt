@@ -32,7 +32,10 @@ class HomeViewModel  @Inject constructor(
         yearMonth = currentMonth,
         listOfYears = (currentMonth.year-5..currentMonth.year+5).toList(),
         finState = FinState(
-            finResultFlat = FinResultsFlat(month=currentMonth)
+            finResultFlat = FinResultsFlat(
+                month=currentMonth.monthValue,
+                year = currentMonth.year
+            )
         )
     )))
 
@@ -45,7 +48,7 @@ class HomeViewModel  @Inject constructor(
         viewModelScope.launch {
             val finState = useCases.getFinResults()
             val listOfFlat = useCases.getFlatsInfo()
-            val listOfSections = useCases.getSectionsInfo()
+            val listOfSections = useCases.getSectionsInfo(year=currentMonth.year, month=currentMonth.monthValue)
             _homeState.value = homeState.value.copy(
                 finState=finState,
                 listOfFlat=listOfFlat,
@@ -79,7 +82,7 @@ class HomeViewModel  @Inject constructor(
             }
             is HomeScreenEvents.OnNewFlatAdd -> {
                 viewModelScope.launch {
-                    val (result, flats) = useCases.addNewFlat(name=event.name, city=event.city)
+                    val (result, flats) = useCases.addNewFlat(name=event.name)
                     if(result && flats!=null){
                         _homeState.value = homeState.value.copy(
                             listOfFlat = flats
@@ -93,7 +96,16 @@ class HomeViewModel  @Inject constructor(
             }
             is HomeScreenEvents.OnSectionAddEdit -> {
                 viewModelScope.launch {
-                    val (result, sections) = useCases.addEditSection(sectionInfo = event.sectionInfo)
+                    val selectedYear = homeState.value.yearMonth.year
+                    val selectedMonth =  homeState.value.yearMonth.monthValue
+                    val (result, sections) = if(event.sectionInfo.id==null)
+                        useCases.addNewSection(newSectionInfo = event.sectionInfo, year=selectedYear, month=selectedMonth)
+                        else useCases.editSection(
+                        newSectionInfo = event.sectionInfo,
+                        oldSectionInfo = homeState.value.sectionDialogSectionInfo,
+                        year=selectedYear,
+                        month=selectedMonth
+                    )
                     if(result && sections!=null){
                         _homeState.value = homeState.value.copy(
                             listOfSections = sections
@@ -145,7 +157,13 @@ class HomeViewModel  @Inject constructor(
             }
             is HomeScreenEvents.OnTransactionAdd -> {
                 viewModelScope.launch {
-                    val (result, sections) = useCases.addTransaction(sectionId = event.sectionId, transaction = event.transaction)
+                    val (result, sections) = useCases.addTransaction(
+                        sectionId = event.sectionId,
+                        transaction = event.transaction,
+                        year = homeState.value.yearMonth.year,
+                        month = homeState.value.yearMonth.monthValue,
+                        currency_name = homeState.value.currencyState.selectedCurrency.displayName
+                    )
                     if(result && sections!=null){
                         _homeState.value = homeState.value.copy(
                             listOfSections = sections

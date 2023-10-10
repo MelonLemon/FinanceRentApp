@@ -149,8 +149,7 @@ fun FinResultCatCard(
     modifier:Modifier= Modifier,
     icon: ImageVector,
     amount: Int,
-    currency: Currency,
-    trend_Percent: Int
+    currency: Currency
 ) {
     EmptyContainer(modifier=modifier){
         Column(
@@ -178,24 +177,24 @@ fun FinResultCatCard(
                         else MaterialTheme.colorScheme.errorContainer
                     )
                 }
-                Button(
-                    onClick = { },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    )
-                ) {
-                    Text(
-                        text = "${trend_Percent}%",
-                        color = if(trend_Percent>0) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.errorContainer
-                    )
-                    Icon(imageVector = if(trend_Percent>0) ImageVector.vectorResource(id = R.drawable.baseline_trending_up_24) else
-                        ImageVector.vectorResource(id = R.drawable.baseline_trending_down_24),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-
-                }
+//                Button(
+//                    onClick = { },
+//                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color.Transparent
+//                    )
+//                ) {
+//                    Text(
+//                        text = "${trend_Percent}%",
+//                        color = if(trend_Percent>0) MaterialTheme.colorScheme.primary
+//                        else MaterialTheme.colorScheme.errorContainer
+//                    )
+//                    Icon(imageVector = if(trend_Percent>0) ImageVector.vectorResource(id = R.drawable.baseline_trending_up_24) else
+//                        ImageVector.vectorResource(id = R.drawable.baseline_trending_down_24),
+//                        contentDescription = null,
+//                        tint = MaterialTheme.colorScheme.onSurface
+//                    )
+//
+//                }
             }
         }}
 }

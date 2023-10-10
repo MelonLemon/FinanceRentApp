@@ -508,12 +508,18 @@ fun FilterWidget(
                         tempSectionsFilterState = tempSectionsFilterState.copy(
                             isAllSelected = !tempSectionsFilterState.isAllSelected,
                             isAllSectionsSelected = !tempSectionsFilterState.isAllSelected,
-                            isFlatSelected = !tempSectionsFilterState.isAllSelected
+                            isFlatSelected = !tempSectionsFilterState.isAllSelected,
+                            listOfSelectedFlatIds = if(!tempSectionsFilterState.isAllSelected) tempSectionsFilterState.listOfFlats.map{it.id}
+                            else emptyList(),
+                            listOfSelectedSecIds = if(!tempSectionsFilterState.isAllSelected) tempSectionsFilterState.listOfSections.map{it.id}
+                            else emptyList()
                         )
                     },
                     onFlatClick= {
                         tempSectionsFilterState = tempSectionsFilterState.copy(
-                            isFlatSelected = !tempSectionsFilterState.isFlatSelected
+                            isFlatSelected = !tempSectionsFilterState.isFlatSelected,
+                            listOfSelectedFlatIds = if(!tempSectionsFilterState.isFlatSelected) tempSectionsFilterState.listOfFlats.map{it.id}
+                            else emptyList()
                         )
                     },
                     onAllSectionClick= {

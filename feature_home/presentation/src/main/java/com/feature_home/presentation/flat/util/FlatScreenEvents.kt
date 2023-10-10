@@ -1,9 +1,6 @@
 package com.feature_home.presentation.flat.util
 
 import com.feature_home.domain.model.FullGuestInfo
-import com.feature_home.domain.model.SectionInfo
-import com.feature_home.domain.model.Transaction
-import com.feature_home.presentation.home.util.HomeScreenEvents
 import java.time.YearMonth
 
 sealed class FlatScreenEvents{

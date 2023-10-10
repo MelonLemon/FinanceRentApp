@@ -34,12 +34,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import com.core.common.components.IconCard
 import com.core.common.components.MoneyText
-import com.feature_home.domain.model.Transaction
+import com.feature_home.domain.model.TransactionInfo
 import com.feature_home.presentation.R
 import com.feature_home.presentation.components.FinResultCatCard
 import com.feature_home.presentation.components.FinResultFlatCard
@@ -151,8 +150,7 @@ fun HomeScreen(
                                     FinResultCatCard(
                                         icon = Icons.Default.List,
                                         currency = homeState.currencyState.selectedCurrency,
-                                        amount = finResSection.amount,
-                                        trend_Percent = finResSection.trend_Percent
+                                        amount = finResSection.amount
                                     )
                                 }
                             }
@@ -207,7 +205,7 @@ fun HomeScreen(
                     }
                 ) {flat ->
                     FlatCard(
-                        title = "${flat.city}: ${flat.name}",
+                        title = flat.name,
                         amount = flat.current_month_amount,
                         currency = homeState.currencyState.selectedCurrency,
                         listInfo = flat.additionalInfo,
@@ -245,10 +243,10 @@ fun HomeScreen(
                             if(amountInt!=0){
                                 homeEvents(HomeScreenEvents.OnTransactionAdd(
                                     sectionId = sectionInfo.id!!,
-                                    transaction = Transaction(
+                                    transaction = TransactionInfo(
                                         id = null,
                                         categoryId = sectionInfo.selectedCategoryId!!,
-                                        amount = amountInt,
+                                        amount = if(sectionInfo.isIncomeSelected) amountInt else -amountInt,
                                         isIncome = sectionInfo.isIncomeSelected
                                     )
                                 ))
@@ -284,8 +282,8 @@ fun HomeScreen(
                 onCancel = {
                     newFlatDialogVisibility = false
                 },
-                onAgree = { name, city ->
-                    homeEvents(HomeScreenEvents.OnNewFlatAdd(name=name,city=city))
+                onAgree = { name ->
+                    homeEvents(HomeScreenEvents.OnNewFlatAdd(name=name))
                 },
                 listOfFlat = homeState.listOfFlat.map{it.name}
             )

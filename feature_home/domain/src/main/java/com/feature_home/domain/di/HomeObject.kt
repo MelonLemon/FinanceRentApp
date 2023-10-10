@@ -1,15 +1,17 @@
 package com.feature_home.domain.di
 
 import com.feature_home.domain.repository.HomeRepository
-import com.feature_home.domain.use_cases.AddEditGuest
-import com.feature_home.domain.use_cases.AddEditSection
+import com.feature_home.domain.use_cases.EditGuest
+import com.feature_home.domain.use_cases.EditSection
 import com.feature_home.domain.use_cases.AddFlatExpenses
 import com.feature_home.domain.use_cases.AddNewFlat
+import com.feature_home.domain.use_cases.AddNewGuest
+import com.feature_home.domain.use_cases.AddNewSection
 import com.feature_home.domain.use_cases.AddTransaction
 import com.feature_home.domain.use_cases.GetExpensesCategories
 import com.feature_home.domain.use_cases.GetFinFlatState
 import com.feature_home.domain.use_cases.GetFinResults
-import com.feature_home.domain.use_cases.GetFlatInfoById
+import com.feature_home.domain.use_cases.GetFlatNameById
 import com.feature_home.domain.use_cases.GetFlatsInfo
 import com.feature_home.domain.use_cases.GetGuests
 import com.feature_home.domain.use_cases.GetListRentDates
@@ -35,19 +37,21 @@ object HomeObject {
             getFinResults = GetFinResults(repository),
             getUpdatedTransactions = GetUpdatedTransactions(repository),
             addNewFlat = AddNewFlat(repository),
-            addEditSection = AddEditSection(repository),
+            editSection = EditSection(repository),
             addTransaction = AddTransaction(repository),
             getFlatsInfo = GetFlatsInfo(repository),
             getSectionsInfo = GetSectionsInfo(repository),
             updatePaidStatusGuest = UpdatePaidStatusGuest(repository),
-            addEditGuest = AddEditGuest(repository),
+            editGuest = EditGuest(repository),
             addFlatExpenses = AddFlatExpenses(repository),
-            getFlatInfoById = GetFlatInfoById(repository),
+            getFlatNameById = GetFlatNameById(repository),
             getGuests = GetGuests(repository),
             getTransactions = GetTransactions(repository),
             getFinFlatState = GetFinFlatState(repository),
             getListRentDates = GetListRentDates(repository),
-            getExpensesCategories = GetExpensesCategories(repository)
+            getExpensesCategories = GetExpensesCategories(repository),
+            addNewSection = AddNewSection(repository),
+            addNewGuest = AddNewGuest(repository)
         )
     }
 

@@ -11,16 +11,13 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
@@ -314,10 +311,13 @@ fun GuestInfoDialog(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Button(onClick = {
-                        onAgree(tempGuestInfo.copy(
-                            start_date = state.selectedStartDateMillis,
-                            end_date = state.selectedEndDateMillis
-                        ))
+                        if(tempGuestInfo.start_date!=null && tempGuestInfo.end_date!=null){
+                            onAgree(tempGuestInfo.copy(
+                                start_date = state.selectedStartDateMillis,
+                                end_date = state.selectedEndDateMillis
+                            ))
+                        }
+
                     }) {
                         Text(text= if(fullGuestInfo.id==null) stringResource(R.string.add_new_guest) else stringResource(R.string.change))
                     }
@@ -332,10 +332,9 @@ fun NewFlatDialog(
     modifier: Modifier = Modifier,
     onCancel: () -> Unit,
     listOfFlat: List<String>,
-    onAgree: (name: String, city: String) -> Unit
+    onAgree: (name: String) -> Unit
 ) {
     var tempName by remember{ mutableStateOf("")}
-    var tempCity by remember{ mutableStateOf("")}
     Dialog(
         onDismissRequest = onCancel
     ) {
@@ -361,12 +360,7 @@ fun NewFlatDialog(
                         }
                     }
                 )
-                OutlinedTextField(
-                    value = tempCity,
-                    onValueChange = { city-> tempCity = city },
-                    textStyle = MaterialTheme.typography.titleMedium,
-                    prefix = { Text(text= stringResource(R.string.city) + ":") }
-                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -378,7 +372,7 @@ fun NewFlatDialog(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Button(onClick = {
-                        if(tempName!="" && (tempName !in listOfFlat)) onAgree(tempName, tempCity)
+                        if(tempName!="" && (tempName !in listOfFlat)) onAgree(tempName)
                     }) {
                         Text(text= stringResource(R.string.ok))
                     }
@@ -405,13 +399,13 @@ fun SectionDialog(
     val firstIncomeName = stringResource(incomeCategories.first().category)
     val firstExpensesName = stringResource(expensesCategories.first().category)
     var tempIncomeCategory by remember{ mutableStateOf(FinCategory(
-        id=incomeCategories.first().id,
-        icon= incomeCategories.first().icon,
+        id=-1,
+        standard_category_id= incomeCategories.first().id,
         name= firstIncomeName
     ))}
     var tempExpensesCategory by remember{ mutableStateOf(FinCategory(
-        id=expensesCategories.first().id,
-        icon= expensesCategories.first().icon,
+        id=-1,
+        standard_category_id= expensesCategories.first().id,
         name= firstExpensesName
     ))}
     Dialog(
@@ -460,9 +454,8 @@ fun SectionDialog(
                                     IconCard(
                                         icon = ImageVector.vectorResource(item.icon),
                                         onCardClick = {
-                                            tempIncomeCategory = FinCategory(
-                                                id=item.id,
-                                                icon= item.icon,
+                                            tempIncomeCategory = tempIncomeCategory.copy(
+                                                standard_category_id= item.id,
                                                 name= nameString
                                             )
                                         },
@@ -477,9 +470,8 @@ fun SectionDialog(
                                     IconCard(
                                         icon = ImageVector.vectorResource(item.icon),
                                         onCardClick = {
-                                            tempExpensesCategory = FinCategory(
-                                                id=item.id,
-                                                icon= item.icon,
+                                            tempExpensesCategory = tempExpensesCategory.copy(
+                                                standard_category_id= item.id,
                                                 name= nameString
                                             )
                                         },
@@ -527,15 +519,17 @@ fun SectionDialog(
 
                     if(isIncomeSelected){
                         items(tempSectionInfo.incomeCategories){category ->
+                            val icon = IncomeCategories.getIcon(category.standard_category_id)
                             IconCard(
-                                icon = ImageVector.vectorResource(category.icon),
+                                icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                                 supportingText = category.name,
                             )
                         }
                     } else {
                         items(tempSectionInfo.expensesCategories){category ->
+                            val icon = ExpensesCategories.getIcon(category.standard_category_id)
                             IconCard(
-                                icon = ImageVector.vectorResource(category.icon),
+                                icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                                 supportingText = category.name,
                             )
                         }

@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetSectionsInfo@Inject constructor(
     private val repository: HomeRepository
 ) {
-    suspend operator fun invoke(): List<SectionInfo> {
-        return repository.getSectionsInfo()
+    suspend operator fun invoke(year:Int, month:Int): List<SectionInfo> {
+        return repository.getSectionsInfo(year=year, month=month)
     }
 }

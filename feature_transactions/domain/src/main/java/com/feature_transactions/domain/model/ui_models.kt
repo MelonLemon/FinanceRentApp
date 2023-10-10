@@ -5,7 +5,8 @@ import java.time.YearMonth
 import java.util.Currency
 
 data class TransactionMonth(
-    val yearMonth: YearMonth,
+    val year: Int,
+    val month: Int,
     val amount: Int,
     val currency: Currency,
     val daysList: List<AllTransactionsDay>
@@ -44,9 +45,17 @@ data class AllTransactionsDay(
 data class TransactionListItem(
     val id: Int,
     val categoryId: Int,
+    val standard_category_id: Int,
     val isIncome: Boolean,
     val categoryName: String,
     val comment: String,
     val amount: Int,
-    val currency: Currency
+    val currency: String
+)
+
+data class CategoriesFilter(
+    val block_id: Int,
+    val categoryId: Int,
+    val standard_category_id: Int,
+    val isIncome: Boolean
 )
