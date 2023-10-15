@@ -7,18 +7,16 @@ import javax.inject.Inject
 class AddNewFlat @Inject constructor(
     private val repository: HomeRepository
 ) {
-    suspend operator fun invoke(name:String): Pair<Boolean, List<FlatInfo>?> {
+    suspend operator fun invoke(name:String): Boolean {
         return if(name.isNotBlank()){
             try {
-                val flats = repository.addNewFlat(name=name)
-
-
-                Pair(true, flats)
+                repository.addNewFlat(name=name)
+                true
             } catch (e: Exception){
-                Pair(false, null)
+                false
             }
         } else {
-            Pair(false, null)
+            false
         }
     }
 }

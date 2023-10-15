@@ -1,11 +1,13 @@
 package com.feature_home.presentation.components
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -19,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import com.core.common.components.AddValueWidget
 import com.core.common.components.IconCard
 import com.core.common.components.MonthYearDisplay
@@ -71,42 +74,51 @@ fun LazyListScope.sectionBlock(
             onBtnClick = onIncomeExpClick
         )
     }
-    if(isIncomeSelected){
-        items(
-            items = sectionInfo.incomeCategories,
-            key = { section ->
-                "${section.id} + ${section.name}"
-            }
+    item {
+        LazyRow(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ){
+            if(isIncomeSelected){
+                items(
+                    items = sectionInfo.incomeCategories,
+                    key = { section ->
+                        "${section.id} + ${section.name}"
+                    }
 
-        ){ income_category ->
-            val icon = IncomeCategories.getIcon(income_category.standard_category_id)
-            IconCard(
-                icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
-                supportingText = income_category.name,
-                onCardClick = {
-                    onCategoryClick(income_category.id)
-                },
-                isSelected = sectionInfo.selectedCategoryId==income_category.id
-            )
-        }
-    } else {
-        items(
-            items = sectionInfo.expensesCategories,
-            key = { section ->
-                "${section.id} + ${section.name}"
+                ){ income_category ->
+                    val icon = IncomeCategories.getIcon(income_category.standard_category_id)
+                    IconCard(
+                        icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
+                        supportingText = income_category.name,
+                        onCardClick = {
+                            onCategoryClick(income_category.id)
+                        },
+                        isSelected = sectionInfo.selectedCategoryId==income_category.id
+                    )
+                }
+            } else {
+                items(
+                    items = sectionInfo.expensesCategories,
+                    key = { section ->
+                        "${section.id} + ${section.name}"
+                    }
+                ){expenses_category ->
+                    val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
+                    IconCard(
+                        icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
+                        supportingText = expenses_category.name,
+                        onCardClick = {
+                            onCategoryClick(expenses_category.id)
+                        },
+                        isSelected = sectionInfo.selectedCategoryId==expenses_category.id
+                    )
+                }
             }
-        ){expenses_category ->
-            val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
-            IconCard(
-                icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
-                supportingText = expenses_category.name,
-                onCardClick = {
-                    onCategoryClick(expenses_category.id)
-                },
-                isSelected = sectionInfo.selectedCategoryId==expenses_category.id
-            )
         }
     }
+
+
 
     item {
         MonthYearDisplay(
@@ -128,10 +140,13 @@ fun LazyListScope.sectionBlock(
             "${transaction.id} + ${sectionInfo.name}"
         }
     ){transaction ->
+
         val category = if(transaction.isIncome) sectionInfo.incomeCategories.first { it.id==transaction.categoryId}
         else sectionInfo.expensesCategories.first { it.id==transaction.categoryId}
         val icon = if(transaction.isIncome) IncomeCategories.getIcon(category.standard_category_id) else
             ExpensesCategories.getIcon(category.standard_category_id)
+        println("category: $category")
+        println("icon: $icon")
         TransactionCard(
             title = category.name,
             icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,

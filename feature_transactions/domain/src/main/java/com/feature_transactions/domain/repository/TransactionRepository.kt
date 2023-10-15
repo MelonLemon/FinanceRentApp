@@ -9,9 +9,9 @@ import java.util.Currency
 
 interface TransactionRepository {
 
-    fun getFilteredTransactions(year: Int, months: List<Int>?,
+    suspend fun getFilteredTransactions(year: Int, months: List<Int>?,
                                 categoriesIds: List<Int>?, currency: Currency
-    ): Flow<List<TransactionMonth>>
+    ): List<TransactionMonth>
 
     suspend fun getCategoriesList(): List<CategoriesFilter>
     suspend fun getYearsList(): List<Int>

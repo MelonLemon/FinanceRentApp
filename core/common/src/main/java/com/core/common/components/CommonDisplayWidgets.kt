@@ -2,6 +2,7 @@ package com.core.common.components
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,10 +10,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -22,6 +25,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -63,7 +67,8 @@ fun EmptyContainer(
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
-        )
+        ),
+        border = BorderStroke(width=1.dp, color = MaterialTheme.colorScheme.outlineVariant)
     ){
         Box(
             modifier = modifier.padding(16.dp),
@@ -81,28 +86,19 @@ fun MonthYearDisplay(
     selectedYearMonth: YearMonth,
     onBtnClick: () -> Unit
 ) {
-
-    Column(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.Start
+    FilledTonalButton(
+        modifier = modifier.padding(8.dp),
+        onClick = onBtnClick,
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     ) {
-        Row(
-            modifier = Modifier,
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp)
-        ){
-            FilledTonalButton(
-                onClick = onBtnClick
-            ) {
-                Icon(imageVector = Icons.Default.DateRange,
-                    contentDescription = null)
-                Text(text="${selectedYearMonth.month.name} ${selectedYearMonth.year}")
+        Icon(imageVector = Icons.Default.DateRange,
+            contentDescription = null)
+        Text(text="${selectedYearMonth.month.name} ${selectedYearMonth.year}")
 
-            }
-        }
     }
 
 
@@ -111,6 +107,7 @@ fun MonthYearDisplay(
 @Composable
 fun CircleIcon(
     backgroundColor: Color = MaterialTheme.colorScheme.onBackground,
+    iconTint: Color = MaterialTheme.colorScheme.background,
     icon: ImageVector
 ) {
     Box(
@@ -121,10 +118,10 @@ fun CircleIcon(
         contentAlignment = Alignment.Center
     ){
         Icon(
-            modifier=Modifier.fillMaxSize(),
+            modifier=Modifier.size(36.dp),
             imageVector = icon,
             contentDescription = null,
-            tint = Color.Transparent
+            tint = iconTint
         )
     }
 }
@@ -250,29 +247,42 @@ fun IconCard(
     icon: ImageVector,
     onCardClick: () -> Unit = { },
     supportingText: String = "",
-    isSelected: Boolean = false
+    isSelected: Boolean = false,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
-    EmptyContainer(
-        modifier = modifier.clickable{
-            onCardClick()
-        }
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable {
+                onCardClick()
+            },
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        )
     ){
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            CircleIcon(
-                backgroundColor=if(isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                icon=icon
-            )
-            if(supportingText.isNotBlank()){
-                Text(
-                    text=supportingText,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = if(isSelected) MaterialTheme.colorScheme.primary else  MaterialTheme.colorScheme.onBackground
+        Box(
+            modifier = modifier.padding(16.dp),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                CircleIcon(
+                    backgroundColor=if(isSelected) MaterialTheme.colorScheme.primary else contentColor,
+                    icon=icon
                 )
-            }
+                if(supportingText.isNotBlank()){
+                    Text(
+                        text=supportingText,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = if(isSelected) MaterialTheme.colorScheme.primary else  MaterialTheme.colorScheme.onBackground
+                    )
+                }
 
+            }
         }
 
     }
@@ -287,7 +297,7 @@ fun CustomSelectableBtn(
 ) {
     Button(
         onClick = { if (!selected) onBtnClick() },
-        contentPadding = PaddingValues(2.dp),
+        contentPadding = PaddingValues(10.dp),
         shape = MaterialTheme.shapes.large,
         colors = ButtonDefaults.buttonColors(
             containerColor = if(selected) MaterialTheme.colorScheme.primaryContainer
@@ -297,8 +307,11 @@ fun CustomSelectableBtn(
         CircleIcon(
             backgroundColor=if(selected) MaterialTheme.colorScheme.onPrimaryContainer
             else MaterialTheme.colorScheme.onSurfaceVariant,
+            iconTint = if(selected) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surfaceVariant,
             icon=icon
         )
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,

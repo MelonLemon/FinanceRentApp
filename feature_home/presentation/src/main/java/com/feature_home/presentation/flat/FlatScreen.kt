@@ -4,27 +4,33 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -39,7 +45,7 @@ import com.core.common.util.IncomeCategories
 import com.feature_home.presentation.R
 import com.feature_home.presentation.components.FinResultFlatCard
 import com.feature_home.presentation.components.GuestCard
-import com.feature_home.presentation.components.GuestInfoDialog
+import com.feature_home.presentation.components.GuestInfoBottomSheet
 import com.feature_home.presentation.components.IncomeExpensesToggle
 import com.feature_home.presentation.components.TransactionCard
 import com.feature_home.presentation.components.YearMonthDialog
@@ -50,6 +56,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Month
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FlatScreen(
@@ -58,7 +65,12 @@ fun FlatScreen(
     flatUiEvents: SharedFlow<FlatUiEvents>,
     backToHomeScreen: () -> Unit
 ) {
-    var guestDialogVisibility by remember{ mutableStateOf(false) }
+    //BottomSheet
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var guestModalSheetVisibility by remember{ mutableStateOf(false) }
+
+    //Dialog
     var yearMonthDialogVisibility by remember{ mutableStateOf(false)}
 
     //FOR LAUNCHED EFFECT
@@ -69,13 +81,13 @@ fun FlatScreen(
         flatUiEvents.collectLatest { event ->
             when(event) {
                 is FlatUiEvents.OpenGuestDialog -> {
-                    guestDialogVisibility = false
+                    guestModalSheetVisibility = true
                 }
                 is FlatUiEvents.CloseGuestDialog -> {
-                    guestDialogVisibility = false
+                    guestModalSheetVisibility = false
                 }
                 is FlatUiEvents.CloseYearMonthDialog -> {
-                    guestDialogVisibility = false
+                    yearMonthDialogVisibility = false
                 }
                 is FlatUiEvents.ErrorMsgUnknown -> {
                     snackbarHostState.showSnackbar(
@@ -88,7 +100,9 @@ fun FlatScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(
+            MaterialTheme.colorScheme.background
+        ),
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         }
@@ -96,49 +110,49 @@ fun FlatScreen(
         if(flatState.isLoading) {
             //progressbar
         } else {
-            BackToNavigationRow(
-                text=flatState.flatName,
-                onBtnClick = {
-                    backToHomeScreen()
-                }
-            )
+
+            Column(
+                modifier = Modifier.padding(innerPadding).background(Color.Transparent)
+            ) {
+                BackToNavigationRow(
+                    text=flatState.flatName,
+                    onBtnClick = {
+                        backToHomeScreen()
+                    }
+                )
             LazyColumn(
                 modifier = Modifier
                     .padding(innerPadding)
                     .background(
-                        MaterialTheme.colorScheme.background
-                    ),
+                        Color.Transparent
+                    )
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item{
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                    ) {
-                        Column() {
-                            MoneyText(
-                                amount = flatState.finalAmount,
-                                currency = flatState.currencyState.selectedCurrency,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                style = MaterialTheme.typography.headlineMedium
-                            )
-                            LazyRow(){
-                                items(
-                                    items = flatState.finResults,
-                                    key = {finResult ->
-                                        "${finResult.month}${finResult.year}"
-                                    }
-                                ){finResultFlat ->
-                                    FinResultFlatCard(
-                                        title = Month.of(finResultFlat.month).name,
-                                        paid_amount = finResultFlat.paid_amount,
-                                        unpaid_amount = finResultFlat.unpaid_amount,
-                                        expenses_amount = finResultFlat.expenses_amount,
-                                        currency = flatState.currencyState.selectedCurrency,
-                                        rent_percent = finResultFlat.rent_percent
-                                    )
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Column() {
+                        MoneyText(
+                            amount = flatState.finalAmount,
+                            currency = flatState.currencyState.selectedCurrency,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        LazyRow(){
+                            items(
+                                items = flatState.finResults,
+                                key = {finResult ->
+                                    "${finResult.month}${finResult.year}"
                                 }
+                            ){finResultFlat ->
+                                FinResultFlatCard(
+                                    title = Month.of(finResultFlat.month).name,
+                                    paid_amount = finResultFlat.paid_amount ?:0,
+                                    unpaid_amount = finResultFlat.unpaid_amount ?:0,
+                                    expenses_amount = finResultFlat.expenses_amount ?:0,
+                                    currency = flatState.currencyState.selectedCurrency,
+                                    rent_percent = finResultFlat.rent_percent ?:0f
+                                )
                             }
                         }
                     }
@@ -194,23 +208,32 @@ fun FlatScreen(
                     }
 
                 }
+
                 if(!flatState.isIncomeSelected){
-                    items(
-                        items = flatState.expensesCategories,
-                        key = { section ->
-                            "${section.id} + ${section.name}"
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ){
+                            items(
+                                items = flatState.expensesCategories,
+                                key = { section ->
+                                    "${section.id} + ${section.name}"
+                                }
+                            ){expenses_category ->
+                                val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
+                                IconCard(
+                                    icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
+                                    supportingText = expenses_category.name,
+                                    onCardClick = {
+                                        flatEvents(FlatScreenEvents.OnCategoryClick(expenses_category.id))
+                                    },
+                                    isSelected = flatState.selectedCategoryId==expenses_category.id
+                                )
+                            }
                         }
-                    ){expenses_category ->
-                        val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
-                        IconCard(
-                            icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
-                            supportingText = expenses_category.name,
-                            onCardClick = {
-                                flatEvents(FlatScreenEvents.OnCategoryClick(expenses_category.id))
-                            },
-                            isSelected = flatState.selectedCategoryId==expenses_category.id
-                        )
                     }
+
 
                     item {
                         MonthYearDisplay(
@@ -251,32 +274,43 @@ fun FlatScreen(
                 }
 
             }
+                //Modal Sheet
+                if(guestModalSheetVisibility){
+                    ModalBottomSheet(
+                        onDismissRequest = {
+                            guestModalSheetVisibility = false
+                        },
+                        sheetState = sheetState
+                    ) {
+                        GuestInfoBottomSheet(
+                            onCancel = {
+                                guestModalSheetVisibility = false
+                            },
+                            onAgree = { guestInfo ->
+                                flatEvents(FlatScreenEvents.OnGuestAddEdit(guestInfo))
+                            },
+                            fullGuestInfo = flatState.guestDialogGuestInfo,
+                            listDates = flatState.listRentDates
+                        )
+                    }
+
+                }
+
+                //Dialog
+                if(yearMonthDialogVisibility){
+                    YearMonthDialog(
+                        selectedYearMonth = flatState.yearMonth,
+                        onCancel = {
+                            yearMonthDialogVisibility = false
+                        },
+                        onAgree = {newYearMonth ->
+                            flatEvents(FlatScreenEvents.OnYearMonthChange(newYearMonth))
+                        }
+                    )
+                }
+            }
         }
     }
 
-    //Dialog
-    if(guestDialogVisibility){
-        GuestInfoDialog(
-            onCancel = {
-                guestDialogVisibility = false
-            },
-            onAgree = { guestInfo ->
-                flatEvents(FlatScreenEvents.OnGuestAddEdit(guestInfo))
-            },
-            fullGuestInfo = flatState.guestDialogGuestInfo,
-            listDates = flatState.listRentDates
-        )
-    }
 
-    if(yearMonthDialogVisibility){
-        YearMonthDialog(
-            selectedYearMonth = flatState.yearMonth,
-            onCancel = {
-                yearMonthDialogVisibility = false
-            },
-            onAgree = {newYearMonth ->
-                flatEvents(FlatScreenEvents.OnYearMonthChange(newYearMonth))
-            }
-        )
-    }
 }

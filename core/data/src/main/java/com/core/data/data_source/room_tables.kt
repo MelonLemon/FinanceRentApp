@@ -34,8 +34,8 @@ data class Blocks(
 )
 data class Transactions(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "transaction_id", index = true) val transactionId: Int?,
-    @ColumnInfo(name = "block_id") val blockId: Int,
-    @ColumnInfo(name = "category_id") val categoryId: Int,
+    @ColumnInfo(name = "block_id", index = true) val blockId: Int,
+    @ColumnInfo(name = "category_id", index = true) val categoryId: Int,
     val amount: Int,
     val currency_name: String,
     val year: Int,
@@ -58,7 +58,7 @@ data class Transactions(
 )
 data class Categories(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "category_id", index = true) val categoryId: Int?,
-    @ColumnInfo(name = "block_id") val blockId: Int,
+    @ColumnInfo(name = "block_id", index = true) val blockId: Int,
     @ColumnInfo(name = "standard_category_id") val standardCategoryId: Int,
     @ColumnInfo(name = "is_income") val isIncome: Boolean,
     @ColumnInfo(name = "name") val name: String
@@ -92,9 +92,9 @@ data class Rents(
 @Entity(tableName = "rents_track",
     foreignKeys = [
         ForeignKey(
-            entity = Blocks::class,
-            parentColumns = ["block_id"],
-            childColumns = ["block_id"],
+            entity = Rents::class,
+            parentColumns = ["rent_id"],
+            childColumns = ["rent_id"],
             onDelete = ForeignKey.CASCADE,
             onUpdate = ForeignKey.CASCADE
         )
@@ -112,3 +112,9 @@ data class RentsTrack(
     @ColumnInfo(name = "is_paid") val isPaid: Boolean,
     @ColumnInfo(name = "transaction_id") val transaction_id: Int?,
 )
+
+data class IncomeExpenses(
+    val income: Int,
+    val expenses: Int
+)
+

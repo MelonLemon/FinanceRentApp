@@ -42,7 +42,8 @@ class FlatViewModel@Inject constructor(
 
     private val _independentFlatState = MutableStateFlow(
         IndependentFlatState(
-        listOfYears = (currentMonth.year-5..currentMonth.year+5).toList()
+            listOfYears = (currentMonth.year-5..currentMonth.year+5).toList(),
+            yearMonth = currentMonth
     )
     )
     private val independentFlatState  = _independentFlatState.asStateFlow()
@@ -81,9 +82,13 @@ class FlatViewModel@Inject constructor(
         FlatState(
             isLoading = independentFlatState.isLoading,
             flatName = independentFlatState.flatName,
-            yearMonth = yearMonth.value,
+            yearMonth = independentFlatState.yearMonth,
             listOfYears = independentFlatState.listOfYears,
-            finalAmount = finResults.sumOf { it.paid_amount + it.expenses_amount },
+            finalAmount = finResults.sumOf {
+                val paidAmount = it.paid_amount ?:0
+                val expenses = it.expenses_amount ?:0
+                paidAmount + expenses },
+
             finResults = finResults,
             guests = guests,
             listRentDates = listRentDates,
@@ -125,8 +130,10 @@ class FlatViewModel@Inject constructor(
             is FlatScreenEvents.OnYearMonthChange -> {
                 viewModelScope.launch {
                     _yearMonth.value = event.yearMonth
+                    _independentFlatState.value = independentFlatState.value.copy(
+                        yearMonth = event.yearMonth
+                    )
                     _onFlatUiEvents.emit(FlatUiEvents.CloseYearMonthDialog)
-
                 }
             }
             is FlatScreenEvents.OnIncomeExpensesClick -> {

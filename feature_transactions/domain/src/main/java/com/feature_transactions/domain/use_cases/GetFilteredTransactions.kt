@@ -9,16 +9,21 @@ import java.util.Currency
 class GetFilteredTransactions  @Inject constructor(
     private val repository: TransactionRepository
 ) {
-    operator fun invoke(
+    suspend operator fun invoke(
         year: Int,
         months: List<Int>?,
         categoriesIds: List<Int>?,
         currency: Currency
-    ): Flow<List<TransactionMonth>>{
-        return repository.getFilteredTransactions(year=year, months=months,
-            categoriesIds=categoriesIds,
-            currency=currency
-        )
+    ): Pair<Boolean, List<TransactionMonth>?>{
+        return try {
+            val transaction = repository.getFilteredTransactions(year=year, months=months,
+                categoriesIds=categoriesIds,
+                currency=currency
+            )
+            Pair(true, transaction)
+        } catch (e: Exception){
+            Pair(false, null)
+        }
 
     }
 }

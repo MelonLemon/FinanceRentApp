@@ -10,4 +10,5 @@
     <string name="income_categories">Income Categories</string>
     <string name="expenses_categories">Expenses Categories</string>
     <string name="apply">Apply</string>
+    <string name="something_goes_wrong_trye_again">Something goes wrong, trye again!</string>
 </resources>

@@ -1,12 +1,15 @@
 package com.feature_home.presentation.components
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -56,11 +59,12 @@ fun FinResultFlatCard(
     unpaid_amount: Int,
     expenses_amount: Int,
     currency: Currency,
-    rent_percent: Float
+    rent_percent: Float?=null
 ) {
     val finResult = expenses_amount-paid_amount
     EmptyContainer(modifier=modifier){
         Column(
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
         ){
@@ -88,19 +92,25 @@ fun FinResultFlatCard(
                         currency = currency,
                         style = MaterialTheme.typography.titleMedium,
                         color = if(finResult>0) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.errorContainer
+                        else MaterialTheme.colorScheme.error
                     )
                 }
             }
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    MarkedInfoDisplay(text= stringResource(R.string.income))
+                    MarkedInfoDisplay(
+                        text= stringResource(R.string.income),
+                        drawColor = MaterialTheme.colorScheme.primaryContainer,
+                        textColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
@@ -123,19 +133,24 @@ fun FinResultFlatCard(
                     }
                 }
                 Column(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalAlignment = Alignment.Start
+                    horizontalAlignment = Alignment.End
                 ) {
-                    MarkedInfoDisplay(text= stringResource(R.string.expenses))
+                    MarkedInfoDisplay(
+                        text= stringResource(R.string.expenses),
+                        drawColor = MaterialTheme.colorScheme.primaryContainer,
+                        textColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                     MoneyText(
                         amount=expenses_amount,
                         currency= currency
                     )
                 }
             }
-            RentPercentWidget(
-                rent_percent = rent_percent
-            )
+            if(rent_percent!=null){
+                RentPercentWidget(rent_percent = rent_percent)
+            }
         }
     }
 }
@@ -148,8 +163,10 @@ fun FinResultFlatCard(
 fun FinResultCatCard(
     modifier:Modifier= Modifier,
     icon: ImageVector,
+    title: String,
     amount: Int,
-    currency: Currency
+    currency: Currency,
+
 ) {
     EmptyContainer(modifier=modifier){
         Column(
@@ -160,42 +177,25 @@ fun FinResultCatCard(
                 backgroundColor = MaterialTheme.colorScheme.onSurface,
                 icon = icon
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            Text(
+                text=title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+                horizontalAlignment = Alignment.Start
             ){
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                    horizontalAlignment = Alignment.Start
-                ){
-                    MarkedInfoDisplay(text= if(amount>0) stringResource(R.string.profit)
-                    else stringResource(R.string.loss))
-                    MoneyText(
-                        amount=amount,
-                        currency= currency,
-                        color = if(amount>0) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.errorContainer
-                    )
-                }
-//                Button(
-//                    onClick = { },
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = Color.Transparent
-//                    )
-//                ) {
-//                    Text(
-//                        text = "${trend_Percent}%",
-//                        color = if(trend_Percent>0) MaterialTheme.colorScheme.primary
-//                        else MaterialTheme.colorScheme.errorContainer
-//                    )
-//                    Icon(imageVector = if(trend_Percent>0) ImageVector.vectorResource(id = R.drawable.baseline_trending_up_24) else
-//                        ImageVector.vectorResource(id = R.drawable.baseline_trending_down_24),
-//                        contentDescription = null,
-//                        tint = MaterialTheme.colorScheme.onSurface
-//                    )
-//
-//                }
+                MarkedInfoDisplay(text= if(amount>0) stringResource(R.string.profit)
+                else stringResource(R.string.loss))
+                MoneyText(
+                    amount=amount,
+                    currency= currency,
+                    color = if(amount>0) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
+                )
             }
+
         }}
 }
 
@@ -219,6 +219,7 @@ fun FlatCard(
             horizontalAlignment = Alignment.Start
         ){
             Row(
+                modifier=Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -321,6 +322,7 @@ fun TransactionCard(
 ) {
     EmptyContainer(modifier=modifier){
         Column(
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
         ){
@@ -329,7 +331,10 @@ fun TransactionCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                IconCard(icon = icon)
+                IconCard(
+                    icon = icon,
+                    modifier = Modifier.width(72.dp)
+                )
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.Start

@@ -18,10 +18,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +48,9 @@ import com.feature_transactions.presentation.components.SectionsFilterWidget
 import com.feature_transactions.presentation.components.transactionDay
 import com.feature_transactions.presentation.util.TransactionScreenEvents
 import com.feature_transactions.presentation.util.TransactionState
+import com.feature_transactions.presentation.util.TransactionsUiEvents
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.time.Month
 import java.time.format.DateTimeFormatter
@@ -54,16 +60,42 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun TransactionScreen(
     transactionState: TransactionState,
-    transactionScreenEvents: (TransactionScreenEvents) -> Unit
+    transactionScreenEvents: (TransactionScreenEvents) -> Unit,
+    transactionsUiEvents: SharedFlow<TransactionsUiEvents>,
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var filterModalSheetVisibility by remember{ mutableStateOf(false) }
-    
-    
+
+//FOR LAUNCHED EFFECT
+    val snackbarHostState = remember { SnackbarHostState() }
+    val unknownError = stringResource(R.string.something_goes_wrong_trye_again)
+
+    LaunchedEffect(key1 = true){
+        transactionsUiEvents.collectLatest { event ->
+            when(event) {
+                is TransactionsUiEvents.CloseFilterBottomSheet -> {
+                    filterModalSheetVisibility = false
+                }
+                is TransactionsUiEvents.ErrorMsgUnknown -> {
+                    snackbarHostState.showSnackbar(
+                        message = unknownError,
+                        actionLabel = null
+                    )
+                }
+
+
+            }
+        }
+    }
+
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        }
         ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -73,8 +105,6 @@ fun TransactionScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
-
                 item {
                     FilterAmountCard(
                         amount = transactionState.filterAmount,

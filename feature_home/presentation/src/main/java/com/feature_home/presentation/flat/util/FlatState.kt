@@ -29,6 +29,7 @@ data class IndependentFlatState(
     val isLoading: Boolean = true,
     val flatName: String="",
     val listOfYears: List<Int>,
+    val yearMonth: YearMonth,
     val guestDialogGuestInfo: FullGuestInfo = FullGuestInfo(),
     val expensesCategories: List<FinCategory> = emptyList(),
     val selectedCategoryId: Int=-1,

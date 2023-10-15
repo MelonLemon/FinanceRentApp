@@ -14,9 +14,9 @@ class GetListRentDates @Inject constructor(
         return repository.getListRentDates(flatId=flatId).mapLatest { listRents ->
             val listRentDates = mutableListOf<Long>()
             val tempRentDates = mutableListOf<Long>()
-            listRents.forEach { pair ->
-                if(pair.first!=null) listRentDates+=pair.first!!
-                if(pair.second!=null) tempRentDates+=pair.second!!
+            listRents.forEach { rentDate ->
+                if(rentDate.list_full_days!=null) listRentDates+=rentDate.list_full_days!!
+                if(rentDate.list_full_days!=null) tempRentDates+=rentDate.list_half_days!!
             }
             val fullDates = tempRentDates.groupBy{it}.filter{ it.value.size>1 }.keys
             listRentDates + fullDates

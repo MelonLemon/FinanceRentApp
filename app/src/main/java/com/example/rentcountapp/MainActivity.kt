@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -44,6 +45,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
+        WindowCompat.setDecorFitsSystemWindows(window, true)
         super.onCreate(savedInstanceState)
         setContent {
             RentCountAppTheme {
@@ -60,7 +62,7 @@ class MainActivity : ComponentActivity() {
                         val currentDestination = navBackStackEntry?.destination
                         if (currentDestination != null) {
                             BottomNavigation(
-                                backgroundColor = MaterialTheme.colorScheme.surfaceColorAtElevation(8.dp)
+                                backgroundColor = MaterialTheme.colorScheme.background
                             ) {
                                 val iconsList = listOf(
                                     Icons.Filled.Home,

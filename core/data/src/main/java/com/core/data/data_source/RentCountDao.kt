@@ -9,10 +9,13 @@ import androidx.room.Transaction
 import com.core.common.util.SimpleItem
 import com.core.data.data_source.util.FLAT_CATEGORY
 import com.core.data.data_source.util.SECTION_CATEGORY
+import com.feature_home.domain.model.AdditionalInfo
 import com.feature_home.domain.model.FinCategory
 import com.feature_home.domain.model.FinResultsFlat
 import com.feature_home.domain.model.FinResultsSection
+import com.feature_home.domain.model.FlatFinInfo
 import com.feature_home.domain.model.FullGuestInfo
+import com.feature_home.domain.model.RentDates
 import com.feature_home.domain.model.SectionInfo
 import com.feature_home.domain.model.TransactionInfo
 import com.feature_transactions.domain.model.CategoriesFilter
@@ -95,17 +98,24 @@ interface RentCountDao {
     suspend fun deleteTransactionById(transaction_id: Int)
 
     @Query("SELECT sum(amount) FROM transactions")
-    suspend fun getSumOfAllTransactions(): Int
+    fun getSumOfAllTransactions(): Flow<Int?>
 
     @Query("WITH flatIds AS (SELECT block_id FROM blocks WHERE block_category=:category) " +
             "SELECT sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS income, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses " +
             "FROM transactions WHERE block_id IN flatIds AND year=:year AND month=:month")
-    suspend fun getIncomeExpenses(category: String, year: Int, month: Int): Pair<Int, Int>
+    suspend fun getIncomeExpenses(category: String, year: Int, month: Int): IncomeExpenses
 
     @Query("WITH sectionsIds AS (SELECT block_id FROM blocks WHERE block_category=:category) " +
             "SELECT block_id as id, sum(CASE WHEN year=:year AND month=:month THEN amount ELSE 0 END) AS amount " +
             "FROM transactions WHERE block_id IN sectionsIds GROUP BY block_id")
     suspend fun finResultsSections(category: String, year: Int, month: Int):List<FinResultsSection>
+
+    @Query("WITH sectionsIds AS (SELECT block_id as id FROM blocks WHERE block_category=:category), " +
+            "ft AS (SELECT block_id as id, sum(amount) AS amount FROM transactions WHERE block_id IN sectionsIds AND year=:year AND month=:month GROUP BY block_id) " +
+            "SELECT sectionsIds.id as id, ft.amount as amount " +
+            "FROM sectionsIds JOIN ft ON sectionsIds.id=ft.id")
+    fun finResultsSectionsFlow(category: String, year: Int, month: Int): Flow<List<FinResultsSection>>
+
 
     //Categories
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -255,16 +265,16 @@ interface RentCountDao {
     suspend fun updateRentStatus(status: Boolean, rent_id: Int)
 
     @Query("SELECT sum(nights) FROM rents_track WHERE  year=:year AND month=:month")
-    suspend fun getRentDays(year: Int, month:Int): Int
+    suspend fun getRentDays(year: Int, month:Int): Int?
 
     @Query("SELECT list_full_days, list_half_days FROM rents_track ")
-    fun getAllRentDates(): Flow<List<Pair<List<Long>?, List<Long>?>>>
+    fun getAllRentDates(): Flow<List<RentDates>>
 
     @Query("SELECT sum(amount) FROM rents_track WHERE  year=:year AND month=:month AND transaction_id is not null")
-    suspend fun getPaidSumRent(year: Int, month:Int): Int
+    suspend fun getPaidSumRent(year: Int, month:Int): Int?
 
     @Query("SELECT sum(amount) FROM rents_track WHERE  year=:year AND month=:month AND transaction_id is null")
-    suspend fun getUnpaidSumRent(year: Int, month:Int): Int
+    suspend fun getUnpaidSumRent(year: Int, month:Int): Int?
 
 
     @Query("SELECT * FROM rents_track WHERE rent_id=:rent_id")
@@ -284,8 +294,8 @@ interface RentCountDao {
 
     @MapInfo(keyColumn = "block_id")
     @Query("WITH filteredTransactions AS (SELECT * FROM transactions WHERE block_id IN (:blocksId) AND year=:year AND month=:month) " +
-            "SELECT filteredTransactions.block_id AS block_id, categories.category_id As id, categories.is_income AS isIncome, " +
-            "categories.standard_category_id AS categoryId, filteredTransactions.amount AS amount " +
+            "SELECT filteredTransactions.block_id AS block_id, filteredTransactions.transaction_id As id, categories.is_income AS isIncome, " +
+            "categories.category_id AS categoryId, filteredTransactions.amount AS amount " +
             "FROM filteredTransactions JOIN categories ON filteredTransactions.category_id=categories.category_id")
     suspend fun getSectionTransactionsBYMonth(year: Int, month: Int, blocksId: List<Int>): Map<Int, List<TransactionInfo>>
 
@@ -308,11 +318,27 @@ interface RentCountDao {
     @Query("SELECT * FROM rents WHERE (start_date BETWEEN :start_date AND :end_date) OR (end_date BETWEEN :start_date AND :end_date)")
     suspend fun getGuestsList(start_date: Long, end_date: Long): List<Rents>
 
+    @Query("WITH flats AS (SELECT * FROM blocks WHERE block_category=:flatCategory), " +
+            "flatsId AS (SELECT block_id FROM flats), " +
+            "ft AS (SELECT block_id, SUM(amount) as amount FROM transactions WHERE block_id IN flatsId AND year=:year AND month=:month GROUP BY block_id)," +
+            "fRents AS (SELECT * FROM rents WHERE block_id IN flatsId), " +
+            "rentsId AS (SELECT rent_id FROM fRents), " +
+            "rentTrack AS (SELECT rent_id, sum(nights) as nights FROM rents_track WHERE rent_id IN rentsId AND year=:year AND month=:month GROUP BY rent_id), " +
+            "rentPercent AS (SELECT fRents.block_id, SUM(rentTrack.nights) AS nights FROM fRents JOIN rentTrack ON fRents.rent_id=rentTrack.rent_id GROUP BY block_id) " +
+            "SELECT flats.block_id AS id, flats.name AS name, ft.amount AS current_month_amount, CAST(rentPercent.nights AS FLOAT)/:numDays AS rent_percent FROM flats " +
+            "LEFT JOIN ft ON flats.block_id=ft.block_id " +
+            "LEFT JOIN rentPercent ON flats.block_id=rentPercent.block_id")
+    fun getListOfFlats(year: Int, month: Int, flatCategory:String, numDays: Int): Flow<List<FlatFinInfo>>
 
-    @MapInfo(keyColumn = "block_id")
+    @MapInfo(keyColumn = "block_id", valueColumn = "amount")
     @Query("SELECT block_id, SUM(amount) AS amount FROM transactions WHERE block_id IN (:blocksId) AND year=:year AND month=:month")
     suspend fun getTransactionByBlockList(year: Int, month: Int, blocksId: List<Int>):Map<Int, Int>
 
+    @MapInfo(keyColumn = "block_id")
+    @Query("SELECT rents.block_id AS block_id, rents.name AS rent_name, rents_track.nights AS nights, rents_track.is_paid AS is_paid " +
+            "FROM rents_track JOIN rents ON rents_track.rent_id=rents.rent_id " +
+            "WHERE rents_track.year=:year AND rents_track.month=:month ")
+    fun getFlatsAdditionalInfo(year: Int, month: Int): Flow<Map<Int, List<AdditionalInfo>>>
 
     @Transaction
     suspend fun getFlatsInfo(year: Int, month: Int, start_date: Long, end_date: Long, flatCategory:String): Triple<List<Blocks>, Map<Int, List<Rents>>, Map<Int, Int>> {
@@ -330,20 +356,20 @@ interface RentCountDao {
         year: Int,
         month: Int
     ): FinResultsFlat {
-        val (paid_amount, expenses_amount) = getIncomeExpenses(
+        val incomeExpenses = getIncomeExpenses(
             category = SECTION_CATEGORY,
             year = year,
             month = month
         )
         val unpaid = getUnpaidSumRent(year = year, month = month)
-        val days = getRentDays(year = year, month = month)
+        val days = getRentDays(year = year, month = month) ?: 0
         val rentPercent = if (days == 0) 0f else (days / numDays).toFloat()
         return FinResultsFlat(
             month = month,
             year = year,
-            paid_amount = paid_amount,
-            expenses_amount = expenses_amount,
-            unpaid_amount = unpaid,
+            paid_amount = incomeExpenses.income,
+            expenses_amount = incomeExpenses.expenses,
+            unpaid_amount = unpaid ?: 0,
             rent_percent = rentPercent
         )
     }
@@ -352,11 +378,18 @@ interface RentCountDao {
             "FROM transactions WHERE block_id=:flat_id AND year=:year GROUP BY year, month), " +
             "rentIds AS (SELECT rent_id FROM rents WHERE block_id=:flat_id), " +
             "flatRent AS (SELECT year, month, sum(amount) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE rent_id IN rentIds AND year=:year GROUP BY year, month) " +
-            "SELECT flatPaid.year AS year, flatPaid.month AS month, flatPaid.paid_amount AS paid_amount, flatPaid.expenses_amount AS expenses_amount, " +
-            "flatRent.unpaid_amount AS unpaid_amount, CAST(flatRent.nights AS FLOAT)/(STRFTIME('%d', DATE(year ||'-01-01','+'||(month-1)||' month', 'start of month','+1 month', '-1 day'))) AS rent_percent " +
+            "SELECT flatPaid.year AS year, flatPaid.month AS month, flatPaid.paid_amount AS paid_amount, flatRent.unpaid_amount AS unpaid_amount, flatPaid.expenses_amount AS expenses_amount, " +
+            "CAST(flatRent.nights AS FLOAT)/(STRFTIME('%d', DATE(flatPaid.year ||'-01-01','+'||(flatPaid.month-1)||' month', 'start of month','+1 month', '-1 day'))) AS rent_percent " +
             "FROM flatPaid JOIN flatRent ON flatPaid.month=flatRent.month")
     fun getFinResultFlatMonthly(flat_id: Int, year: Int): Flow<List<FinResultsFlat>>
 
+    @Query("WITH flatPaid AS (SELECT year, month, sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS paid_amount, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses_amount " +
+            "FROM transactions WHERE month=:month AND year=:year GROUP BY year, month), " +
+            "flatRent AS (SELECT year, month, sum(amount) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE month=:month AND year=:year GROUP BY year, month) " +
+            "SELECT flatPaid.year AS year, flatPaid.month AS month, flatPaid.paid_amount AS paid_amount, flatRent.unpaid_amount AS unpaid_amount, flatPaid.expenses_amount AS expenses_amount, " +
+            ":rentPercent AS rent_percent " +
+            "FROM flatPaid JOIN flatRent ON flatPaid.month=flatRent.month")
+    fun getAllFinResultFlatByMonth(year: Int, month: Int, rentPercent: Float = 0f): Flow<FinResultsFlat?>
 
     @Transaction
     suspend fun updatePaidStatusGuest(rent_id: Int, currency_name: String, status: Boolean, currentDate: Long){
@@ -409,14 +442,15 @@ interface RentCountDao {
             val incomeCat = incomeCategories[block.blockId] ?: emptyList()
             val expCat = expensesCategories[block.blockId] ?: emptyList()
             val transactions = transactionsInfo[block.blockId] ?: emptyList()
+            val newSelectedId = if(incomeCat.isNotEmpty()) incomeCat.first().id else 0
             listOfSections.add(
                 SectionInfo(
                     id = block.blockId,
                     name = block.name,
                     incomeCategories =  incomeCat,
                     expensesCategories = expCat,
-                    transactionsDisplay = transactions
-
+                    transactionsDisplay = transactions,
+                    selectedCategoryId = newSelectedId
                 )
             )
         }
@@ -531,7 +565,7 @@ interface RentCountDao {
             "SELECT ft.`current_date`, ft.transaction_id AS id, ft.category_id AS categoryId, fCat.standard_category_id AS standard_category_id, " +
             "fCat.is_income AS isIncome, fCat.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
             "FROM fCat JOIN ft ON fCat.category_id=ft.category_id")
-    fun getTransactions(year: Int, months: List<Int>?, categoriesIds: List<Int>?): Flow<Map<Long, List<TransactionListItem>>>
+    suspend fun getTransactions(year: Int, months: List<Int>?, categoriesIds: List<Int>?): Map<Long, List<TransactionListItem>>
 
     @Query("SELECT block_id, category_id AS categoryId, standard_category_id, is_income AS isIncome FROM categories ")
     suspend fun getCategoriesList(): List<CategoriesFilter>

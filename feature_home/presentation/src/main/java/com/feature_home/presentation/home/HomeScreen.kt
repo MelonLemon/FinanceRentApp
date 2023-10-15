@@ -4,11 +4,10 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,11 +16,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -31,8 +33,10 @@ import androidx.compose.ui.unit.dp
 import com.feature_home.presentation.home.util.HomeScreenEvents
 import com.feature_home.presentation.home.util.HomeState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -44,14 +48,15 @@ import com.feature_home.presentation.components.FinResultCatCard
 import com.feature_home.presentation.components.FinResultFlatCard
 import com.feature_home.presentation.components.FlatCard
 import com.feature_home.presentation.components.NewFlatDialog
-import com.feature_home.presentation.components.SectionDialog
-import com.feature_home.presentation.components.SettingsDialog
+import com.feature_home.presentation.components.SectionBottomSheet
+import com.feature_home.presentation.components.SettingsBottomSheet
 import com.feature_home.presentation.components.YearMonthDialog
 import com.feature_home.presentation.components.sectionBlock
 import com.feature_home.presentation.home.util.HomeUiEvents
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
@@ -61,10 +66,15 @@ fun HomeScreen(
     toFlatScreen: (Int) -> Unit
 ) {
     //Dialog States
-    var settingsDialogVisibility by remember{ mutableStateOf(false)}
+    var settingsBottomSheetVisibility by remember{ mutableStateOf(false)}
     var newFlatDialogVisibility by remember{ mutableStateOf(false)}
-    var sectionDialogVisibility by remember{ mutableStateOf(false)}
+    var sectionBottomSheetVisibility by remember{ mutableStateOf(false)}
     var yearMonthDialogVisibility by remember{ mutableStateOf(false)}
+
+    //BottomSheet
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showBottomSheet by remember { mutableStateOf(false) }
 
     //FOR LAUNCHED EFFECT
     val snackbarHostState = remember { SnackbarHostState() }
@@ -74,16 +84,19 @@ fun HomeScreen(
         homeUiEvents.collectLatest { event ->
             when(event) {
                 is HomeUiEvents.CloseSettingsDialog -> {
-                    settingsDialogVisibility = false
+                    showBottomSheet = false
+                    settingsBottomSheetVisibility = false
                 }
                 is HomeUiEvents.CloseNewFlatDialog -> {
                     newFlatDialogVisibility = false
                 }
                 is HomeUiEvents.OpenSectionDialog -> {
-                    sectionDialogVisibility = true
+                    sectionBottomSheetVisibility = true
+                    showBottomSheet = true
                 }
                 is HomeUiEvents.CloseSectionDialog -> {
-                    sectionDialogVisibility = false
+                    showBottomSheet = false
+                    sectionBottomSheetVisibility = false
                 }
                 is HomeUiEvents.CloseYearMonthDialog -> {
                     yearMonthDialogVisibility = false
@@ -100,7 +113,11 @@ fun HomeScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                MaterialTheme.colorScheme.background
+            ),
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         }
@@ -108,79 +125,92 @@ fun HomeScreen(
         if(homeState.isLoading) {
             //progressbar
         } else {
+
             LazyColumn(
                 modifier = Modifier
                     .padding(innerPadding)
                     .background(
                         MaterialTheme.colorScheme.background
-                    ),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    )
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item{
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                    ) {
-                        Column() {
-                            MoneyText(
-                                amount = homeState.finState.finalAmount,
-                                currency = homeState.currencyState.selectedCurrency,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                style = MaterialTheme.typography.headlineMedium
-                            )
-                            LazyRow(){
-                                item {
-                                    FinResultFlatCard(
-                                        icon = Icons.Default.Home,
-                                        title = stringResource(R.string.flats),
-                                        paid_amount = homeState.finState.finResultFlat.paid_amount,
-                                        unpaid_amount = homeState.finState.finResultFlat.unpaid_amount,
-                                        expenses_amount = homeState.finState.finResultFlat.expenses_amount,
-                                        currency = homeState.currencyState.selectedCurrency,
-                                        rent_percent = homeState.finState.finResultFlat.rent_percent
-                                    )
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Column() {
+                        MoneyText(
+                            amount = homeState.finState.finalAmount ?:0,
+                            currency = homeState.currencyState.selectedCurrency,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        LazyRow(
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ){
+                            item {
+                                FinResultFlatCard(
+                                    icon = Icons.Default.Home,
+                                    title = stringResource(R.string.flats),
+                                    paid_amount = homeState.finState.finResultFlat.paid_amount ?:0,
+                                    unpaid_amount = homeState.finState.finResultFlat.unpaid_amount ?:0,
+                                    expenses_amount = homeState.finState.finResultFlat.expenses_amount ?:0,
+                                    currency = homeState.currencyState.selectedCurrency
+                                )
+                            }
+                            items(
+                                items = homeState.finState.finResultsSections,
+                                key = {finResSection ->
+                                    "${finResSection.id}SECTION"
                                 }
-                                items(
-                                    items = homeState.finState.finResultsSections,
-                                    key = {finResSection ->
-                                        "${finResSection.id}SECTION"
-                                    }
-                                ){ finResSection ->
-                                    FinResultCatCard(
-                                        icon = Icons.Default.List,
-                                        currency = homeState.currencyState.selectedCurrency,
-                                        amount = finResSection.amount
-                                    )
-                                }
+                            ){ finResSection ->
+                                FinResultCatCard(
+                                    icon = Icons.Default.List,
+                                    currency = homeState.currencyState.selectedCurrency,
+                                    amount = finResSection.amount ?:0,
+                                    title = homeState.listOfSections.find { it.id== finResSection.id}?.name ?: ""
+                                )
                             }
                         }
                     }
                 }
                 item{
-                    Row(
+                    LazyRow(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface).clip(MaterialTheme.shapes.medium).padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        IconCard(
-                            icon = ImageVector.vectorResource(id = R.drawable.baseline_add_home_24),
-                            onCardClick = {
-                                newFlatDialogVisibility = true
-                            }
-                        )
-                        IconCard(
-                            icon = ImageVector.vectorResource(id = R.drawable.baseline_create_new_folder_24),
-                            onCardClick = {
-                                homeEvents(HomeScreenEvents.OpenNewSectionDialog)
-                            }
-                        )
-                        IconCard(
-                            icon = Icons.Default.Settings,
-                            onCardClick = {
-                                settingsDialogVisibility = true
-                            }
-                        )
-
+                        item {
+                            IconCard(
+                                icon = ImageVector.vectorResource(id = R.drawable.baseline_add_home_24),
+                                onCardClick = {
+                                    newFlatDialogVisibility = true
+                                },
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                        item {
+                            IconCard(
+                                icon = ImageVector.vectorResource(id = R.drawable.baseline_create_new_folder_24),
+                                onCardClick = {
+                                    homeEvents(HomeScreenEvents.OpenNewSectionDialog)
+                                },
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                        item {
+                            IconCard(
+                                icon = Icons.Default.Settings,
+                                onCardClick = {
+                                    settingsBottomSheetVisibility = true
+                                    showBottomSheet = true
+                                },
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
                     }
                 }
 
@@ -189,7 +219,12 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         horizontalAlignment = Alignment.Start
                     ){
-                        Text(text= stringResource(R.string.flats))
+
+                        Text(
+                            text=stringResource(R.string.flats),
+                            style = MaterialTheme.typography.displaySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         MoneyText(
                             amount = homeState.listOfFlat.sumOf { it.current_month_amount },
                             currency = homeState.currencyState.selectedCurrency,
@@ -208,7 +243,7 @@ fun HomeScreen(
                         title = flat.name,
                         amount = flat.current_month_amount,
                         currency = homeState.currencyState.selectedCurrency,
-                        listInfo = flat.additionalInfo,
+                        listInfo = homeState.flatsAdditionalInfo[flat.id] ?: emptyList(),
                         rent_percent = flat.rent_percent,
                         onCardClick = {
                             toFlatScreen(flat.id)
@@ -263,19 +298,50 @@ fun HomeScreen(
             }
         }
 
-        //Dialogs
-        if(settingsDialogVisibility){
-            SettingsDialog(
-                onCancel = {
-                    settingsDialogVisibility = false
+        //Bottom Sheet
+
+        if (showBottomSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet = false
+                    settingsBottomSheetVisibility = false
+                    sectionBottomSheetVisibility = false
                 },
-                selectedCurrency = homeState.currencyState.selectedCurrency,
-                listCurrency = homeState.currencyState.listCurrency,
-                onAgree = {currency ->
-                    homeEvents(HomeScreenEvents.OnCurrencyChange(currency))
+                sheetState = sheetState
+            ) {
+                // Sheet content
+                if(settingsBottomSheetVisibility){
+                    SettingsBottomSheet(
+                        onCancel = {
+                            showBottomSheet = false
+                            settingsBottomSheetVisibility = false
+                        },
+                        selectedCurrency = homeState.currencyState.selectedCurrency,
+                        listCurrency = homeState.currencyState.listCurrency,
+                        onAgree = {currency ->
+                            homeEvents(HomeScreenEvents.OnCurrencyChange(currency))
+                        }
+                    )
                 }
-            )
+
+                if(sectionBottomSheetVisibility){
+
+                    SectionBottomSheet(
+                        listOfName = homeState.listOfSections.map{it.name},
+                        sectionInfo = homeState.sectionDialogSectionInfo,
+                        onCancel = {
+                            showBottomSheet = false
+                            sectionBottomSheetVisibility = false
+                        },
+                        onAgree = {newSectionInfo ->
+                            homeEvents(HomeScreenEvents.OnSectionAddEdit(newSectionInfo))
+                        }
+                    )
+                }
+            }
         }
+        //Dialogs
+
 
         if(newFlatDialogVisibility){
             NewFlatDialog(
@@ -288,20 +354,8 @@ fun HomeScreen(
                 listOfFlat = homeState.listOfFlat.map{it.name}
             )
         }
-        if(sectionDialogVisibility){
-            val listOfSections = homeState.listOfSections.map{it.name}
-            listOfSections.toMutableList().remove(homeState.sectionDialogSectionInfo.name)
-            SectionDialog(
-                listOfName = listOfSections,
-                sectionInfo = homeState.sectionDialogSectionInfo,
-                onCancel = {
-                    sectionDialogVisibility = false
-                },
-                onAgree = {newSectionInfo ->
-                    homeEvents(HomeScreenEvents.OnSectionAddEdit(newSectionInfo))
-                }
-            )
-        }
+
+
 
         if(yearMonthDialogVisibility){
             YearMonthDialog(

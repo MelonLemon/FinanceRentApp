@@ -15,17 +15,22 @@ import com.core.data.data_source.Transactions
 import com.core.data.data_source.util.FLAT_CATEGORY
 import com.core.data.data_source.util.SECTION_CATEGORY
 import com.core.data.data_source.util.getListOfTracks
+import com.feature_home.domain.model.AdditionalInfo
 import com.feature_home.domain.model.FinCategory
 import com.feature_home.domain.model.FinFlatState
 import com.feature_home.domain.model.FinResultsFlat
+import com.feature_home.domain.model.FinResultsSection
 import com.feature_home.domain.model.FinState
+import com.feature_home.domain.model.FlatFinInfo
 import com.feature_home.domain.model.FlatInfo
 import com.feature_home.domain.model.FullGuestInfo
+import com.feature_home.domain.model.RentDates
 import com.feature_home.domain.model.SectionInfo
 import com.feature_home.domain.model.TransactionInfo
 
 import com.feature_home.domain.repository.HomeRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
@@ -55,7 +60,7 @@ class HomeRepositoryImpl @Inject constructor(
 
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override suspend fun addNewFlat(name: String): List<FlatInfo> {
+    override suspend fun addNewFlat(name: String)  {
         dao.addBasic(
             name = name,
             blockCategory = FLAT_CATEGORY,
@@ -89,7 +94,6 @@ class HomeRepositoryImpl @Inject constructor(
                 )
             )
         )
-        return getFlatsInfo()
     }
 
     override suspend fun editSection(
@@ -171,7 +175,7 @@ class HomeRepositoryImpl @Inject constructor(
             month=month
         )
         return FinState(
-            finalAmount = finalAmount,
+            finalAmount = finalAmount.first() ?: 0,
             finResultFlat = finResultFlat,
             finResultsSections = finResultsSections
         )
@@ -218,6 +222,52 @@ class HomeRepositoryImpl @Inject constructor(
         )
     }
 
+    override fun getFinResultsSectionsFlow(
+        year: Int,
+        month: Int
+    ): Flow<List<FinResultsSection>> {
+        return dao.finResultsSectionsFlow(
+            category=SECTION_CATEGORY,
+            year = year,
+            month = month
+        )
+    }
+
+    override fun getAllFinResultFlatByMonth(
+        year: Int,
+        month: Int,
+        rentPercent: Float
+    ): Flow<FinResultsFlat?> {
+        return dao.getAllFinResultFlatByMonth(year=year, month=month, rentPercent=0f)
+    }
+
+    override fun getListOfFlats(
+        year: Int,
+        month: Int,
+        numDays: Int
+    ): Flow<List<FlatFinInfo>> {
+        return dao.getListOfFlats(
+            flatCategory=FLAT_CATEGORY,
+            year = year,
+            month = month,
+            numDays = numDays
+        )
+    }
+
+    override fun getSumOfAllTransactions(): Flow<Int?> {
+        return dao.getSumOfAllTransactions()
+    }
+
+    override fun getFlatsAdditionalInfo(
+        year: Int,
+        month: Int
+    ): Flow<Map<Int, List<AdditionalInfo>>> {
+        return dao.getFlatsAdditionalInfo(
+            year=year,
+            month=month
+        )
+    }
+
     override suspend fun getExpensesCategories(flatId: Int): List<FinCategory> {
         return dao.getCatById(block_id = flatId)
     }
@@ -244,7 +294,7 @@ class HomeRepositoryImpl @Inject constructor(
         return dao.getFinResultFlatMonthly(flatId, year= Year.now().value)
     }
 
-    override fun getListRentDates(flatId: Int): Flow<List<Pair<List<Long>?, List<Long>?>>> {
+    override fun getListRentDates(flatId: Int): Flow<List<RentDates>> {
         return dao.getAllRentDates()
     }
 

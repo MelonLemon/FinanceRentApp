@@ -18,5 +18,10 @@ data class HomeUseCases(
     val getListRentDates: GetListRentDates,
     val getExpensesCategories: GetExpensesCategories,
     val addNewSection: AddNewSection,
-    val addNewGuest: AddNewGuest
+    val addNewGuest: AddNewGuest,
+    val getFinResultsSections: GetFinResultsSections,
+    val getAllFinResultFlatByMonth: GetAllFinResultFlatByMonth,
+    val getSumOfAllTransactions: GetSumOfAllTransactions,
+    val getListOfFlats: GetListOfFlats,
+    val getFlatsAdditionalInfo: GetFlatsAdditionalInfo
 )

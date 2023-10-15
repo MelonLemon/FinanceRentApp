@@ -1,5 +1,7 @@
 package com.feature_transactions.presentation.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -19,20 +21,24 @@ fun NavController.navigateToTransactions() {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.transactionScreen() {
 
     composable(route = transactionRoute) {
         val viewModel = hiltViewModel<TransactionViewModel>()
         val transactionState by viewModel.transactionState.collectAsStateWithLifecycle()
         val transactionScreenEvents = viewModel::transactionScreenEvents
+        val transactionsUiEvents by viewModel::onTransactionsUiEvents
         TransactionScreen(
             transactionState=transactionState,
-            transactionScreenEvents=transactionScreenEvents
+            transactionScreenEvents=transactionScreenEvents,
+            transactionsUiEvents = transactionsUiEvents
         )
     }
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.transactionGraph(
     navController: NavController
 ) {

@@ -17,7 +17,7 @@ data class FullGuestInfo(
 )
 
 data class FinState(
-    val finalAmount: Int =0,
+    val finalAmount: Int? =0,
     val finResultFlat: FinResultsFlat,
     val finResultsSections: List<FinResultsSection> = emptyList()
 )
@@ -34,18 +34,31 @@ data class FlatInfo(
     val rent_percent: Float
 )
 
+data class FlatFinInfo(
+    val id: Int,
+    val name: String,
+    val current_month_amount: Int,
+    val rent_percent: Float
+)
+
+data class AdditionalInfo(
+    val rent_name: String,
+    val nights: String,
+    val is_paid: Boolean
+)
+
 data class FinResultsFlat(
     val year: Int,
     val month: Int,
-    val paid_amount: Int=0,
-    val unpaid_amount: Int=0,
-    val expenses_amount: Int=0,
-    val rent_percent: Float=0f
+    val paid_amount: Int?=0,
+    val unpaid_amount: Int?=0,
+    val expenses_amount: Int?=0,
+    val rent_percent: Float?=0f
 )
 
 data class FinResultsSection(
     val id: Int,
-    val amount: Int
+    val amount: Int?
 )
 
 data class SectionInfo(
@@ -57,6 +70,8 @@ data class SectionInfo(
     val selectedCategoryId:Int=0,
     val transactionsDisplay: List<TransactionInfo> = emptyList()
 )
+
+
 
 data class FinCategory(
     val id: Int,
@@ -70,3 +85,7 @@ data class TransactionInfo(
     val categoryId: Int,
     val amount: Int
 )
+
+data class RentDates(
+    val list_full_days: List<Long>?,
+    val list_half_days: List<Long>?)

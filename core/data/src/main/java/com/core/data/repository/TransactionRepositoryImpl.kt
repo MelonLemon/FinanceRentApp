@@ -21,32 +21,37 @@ class TransactionRepositoryImpl  @Inject constructor(
 ): TransactionRepository {
     @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getFilteredTransactions(
+    override suspend fun getFilteredTransactions(
         year: Int, months: List<Int>?,
         categoriesIds: List<Int>?,
         currency: Currency
-    ): Flow<List<TransactionMonth>> {
-        return dao.getTransactions(
+    ): List<TransactionMonth> {
+        val transactions = dao.getTransactions(
             year = year, months=months, categoriesIds=categoriesIds
-        ).mapLatest { transactions ->
-            val monthsList = months ?: 1..12
-            val daysMap = transactions.map{ (key,value) ->
-                AllTransactionsDay(
-                    date = key.toLocalDate()!!,
-                    transactions = value
-                )
-            }.groupBy { it.date.monthValue }
-            val listTransactionMonth = monthsList.map {month ->
-                TransactionMonth(
-                    year = year,
-                    month = month,
-                    amount = daysMap[month]?.sumOf { it.getSumOfTransactions() } ?: 0,
-                    currency = currency,
-                    daysList = daysMap[month] ?: emptyList()
-                )
+        )
+
+        return if(transactions.isEmpty()){
+            emptyList()
+            } else {
+                val monthsList = months ?: 1..12
+                val daysMap = transactions.mapNotNull{ (key,value) ->
+                    AllTransactionsDay(
+                        date = key.toLocalDate()!!,
+                        transactions = value
+                    )
+                }.groupBy { it.date.monthValue }
+                val listTransactionMonth = monthsList.map {month ->
+                    TransactionMonth(
+                        year = year,
+                        month = month,
+                        amount = daysMap[month]?.sumOf { it.getSumOfTransactions() } ?: 0,
+                        currency = currency,
+                        daysList = daysMap[month] ?: emptyList()
+                    )
+                }
+                listTransactionMonth
             }
-            listTransactionMonth
-        }
+
     }
 
     override suspend fun getCategoriesList(): List<CategoriesFilter> {

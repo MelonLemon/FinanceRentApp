@@ -8,14 +8,19 @@ import com.feature_home.domain.use_cases.AddNewFlat
 import com.feature_home.domain.use_cases.AddNewGuest
 import com.feature_home.domain.use_cases.AddNewSection
 import com.feature_home.domain.use_cases.AddTransaction
+import com.feature_home.domain.use_cases.GetAllFinResultFlatByMonth
 import com.feature_home.domain.use_cases.GetExpensesCategories
 import com.feature_home.domain.use_cases.GetFinFlatState
 import com.feature_home.domain.use_cases.GetFinResults
+import com.feature_home.domain.use_cases.GetFinResultsSections
 import com.feature_home.domain.use_cases.GetFlatNameById
+import com.feature_home.domain.use_cases.GetFlatsAdditionalInfo
 import com.feature_home.domain.use_cases.GetFlatsInfo
 import com.feature_home.domain.use_cases.GetGuests
+import com.feature_home.domain.use_cases.GetListOfFlats
 import com.feature_home.domain.use_cases.GetListRentDates
 import com.feature_home.domain.use_cases.GetSectionsInfo
+import com.feature_home.domain.use_cases.GetSumOfAllTransactions
 import com.feature_home.domain.use_cases.GetTransactions
 import com.feature_home.domain.use_cases.GetUpdatedTransactions
 import com.feature_home.domain.use_cases.HomeUseCases
@@ -51,7 +56,12 @@ object HomeObject {
             getListRentDates = GetListRentDates(repository),
             getExpensesCategories = GetExpensesCategories(repository),
             addNewSection = AddNewSection(repository),
-            addNewGuest = AddNewGuest(repository)
+            addNewGuest = AddNewGuest(repository),
+            getFinResultsSections = GetFinResultsSections(repository),
+            getAllFinResultFlatByMonth = GetAllFinResultFlatByMonth(repository),
+            getSumOfAllTransactions = GetSumOfAllTransactions(repository),
+            getListOfFlats = GetListOfFlats(repository),
+            getFlatsAdditionalInfo = GetFlatsAdditionalInfo(repository)
         )
     }
 
