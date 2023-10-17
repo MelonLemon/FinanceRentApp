@@ -73,7 +73,8 @@ fun TransactionScreen(
 
     LaunchedEffect(key1 = true){
         transactionsUiEvents.collectLatest { event ->
-            when(event) {
+            when(event)
+            {
                 is TransactionsUiEvents.CloseFilterBottomSheet -> {
                     filterModalSheetVisibility = false
                 }
@@ -91,9 +92,6 @@ fun TransactionScreen(
                     )
                 }
 
-
-
-
             }
         }
     }
@@ -101,7 +99,9 @@ fun TransactionScreen(
 
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         }
@@ -152,27 +152,24 @@ fun TransactionScreen(
                 }
 
             } else {
-                transactionState.transactionsByMonth.forEach { month ->
-                    val showMonth = month.month in transactionState.filterState.periodFilterState.months
-                    if(showMonth){
 
-                        item {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ){
-                                Text(text= Month.of(month.month).name)
-                                MoneyText(amount = month.amount, currency = month.currency)
-                            }
+                transactionState.transactionsByMonth.forEach { month ->
+                    item {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ){
+                            Text(text= Month.of(month.month).name)
+                            MoneyText(amount = month.amount, currency = month.currency)
                         }
-                        val pattern = "dd.MM"
-                        val format = DateTimeFormatter.ofPattern(pattern)
-                        month.daysList.forEach { days ->
-                            transactionDay(
-                                title = days.date.format(format) ?: pattern,
-                                listOfItems = days.transactions
-                            )
-                        }
+                    }
+                    val pattern = "dd.MM"
+                    val format = DateTimeFormatter.ofPattern(pattern)
+                    month.daysList.forEach { days ->
+                        transactionDay(
+                            title = days.date.format(format) ?: pattern,
+                            listOfItems = days.transactions
+                        )
                     }
 
                 }

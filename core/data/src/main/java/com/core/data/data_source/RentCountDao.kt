@@ -155,7 +155,7 @@ interface RentCountDao {
                         blockId = rents.blockId,
                         categoryId = categoryId,
                         amount = track.amount,
-                        currency_name = currency_name,
+                        currencyName = currency_name,
                         year = track.year,
                         month = track.month,
                         currentDate = currentDate,
@@ -186,7 +186,7 @@ interface RentCountDao {
                 blockId = rents.blockId,
                 categoryId = categoryId,
                 amount = rents.forAllNights,
-                currency_name = currency_name,
+                currencyName = currency_name,
                 year = year,
                 month = month,
                 currentDate = currentDate,
@@ -256,7 +256,7 @@ interface RentCountDao {
                                 blockId = rents.blockId,
                                 categoryId = categoryId,
                                 amount = rentTrack.amount,
-                                currency_name = currency_name,
+                                currencyName = currency_name,
                                 year = rentTrack.year,
                                 month = rentTrack.month,
                                 currentDate=currentDate,
@@ -360,10 +360,6 @@ interface RentCountDao {
     @Query("SELECT * FROM rents WHERE (start_date BETWEEN :start_date AND :end_date) OR (end_date BETWEEN :start_date AND :end_date)")
     suspend fun getGuests(start_date: Long, end_date: Long):Map<Int, List<Rents>>
 
-
-    @Query("SELECT * FROM rents WHERE (start_date BETWEEN :start_date AND :end_date) OR (end_date BETWEEN :start_date AND :end_date)")
-    suspend fun getGuestsList(start_date: Long, end_date: Long): List<Rents>
-
     @Query("WITH flats AS (SELECT * FROM blocks WHERE block_category=:flatCategory), " +
             "flatsId AS (SELECT block_id FROM flats), " +
             "ft AS (SELECT block_id, SUM(amount) as amount FROM transactions WHERE block_id IN flatsId AND year=:year AND month=:month GROUP BY block_id)," +
@@ -460,7 +456,7 @@ interface RentCountDao {
                             blockId = rent.blockId,
                             categoryId = categoryId,
                             amount = track.amount,
-                            currency_name = currency_name,
+                            currencyName = currency_name,
                             year = track.year,
                             month = track.month,
                             currentDate=currentDate,
@@ -605,13 +601,35 @@ interface RentCountDao {
         )
     }
 
-    @MapInfo(keyColumn = "current_date")
-    @Query("WITH ft AS (SELECT * FROM transactions WHERE year=:year AND (:months IS Null OR month IN (:months))), " +
-            "fCat AS(SELECT * FROM categories WHERE :categoriesIds IS Null OR category_id IN (:categoriesIds)) " +
-            "SELECT ft.`current_date`, ft.transaction_id AS id, ft.category_id AS categoryId, fCat.standard_category_id AS standard_category_id, " +
+    @MapInfo(keyColumn = "date")
+    @Query("WITH ft AS (SELECT * FROM transactions WHERE year=:year AND month IN (:months)), " +
+            "fCat AS (SELECT * FROM categories WHERE category_id IN (:categoriesIds)) " +
+            "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, fCat.standard_category_id AS standard_category_id, " +
             "fCat.is_income AS isIncome, fCat.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
-            "FROM fCat JOIN ft ON fCat.category_id=ft.category_id")
-    suspend fun getTransactions(year: Int, months: List<Int>?, categoriesIds: List<Int>?): Map<Long, List<TransactionListItem>>
+            "FROM ft INNER JOIN fCat ON ft.category_id=fCat.category_id")
+    suspend fun getTransactionsFiltered(year: Int, months: List<Int>, categoriesIds: List<Int>): Map<Long, List<TransactionListItem>>
+
+    @MapInfo(keyColumn = "date")
+    @Query("WITH ft AS (SELECT * FROM transactions WHERE (year=:year)) " +
+            "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, categories.standard_category_id AS standard_category_id, " +
+            "categories.is_income AS isIncome, categories.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
+            "FROM ft INNER JOIN categories ON ft.category_id=categories.category_id")
+    suspend fun getTransactionsWithoutFilters(year: Int): Map<Long, List<TransactionListItem>>
+
+    @MapInfo(keyColumn = "date")
+    @Query("WITH ft AS (SELECT * FROM transactions WHERE year=:year AND month IN (:months)) " +
+            "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, categories.standard_category_id AS standard_category_id, " +
+            "categories.is_income AS isIncome, categories.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
+            "FROM ft INNER JOIN categories ON ft.category_id=categories.category_id")
+    suspend fun getTransactionsFilterMonths(year: Int, months: List<Int>): Map<Long, List<TransactionListItem>>
+
+    @MapInfo(keyColumn = "date")
+    @Query("WITH ft AS (SELECT * FROM transactions WHERE year=:year ), " +
+            "fCat AS (SELECT * FROM categories WHERE category_id IN (:categoriesIds)) " +
+            "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, fCat.standard_category_id AS standard_category_id, " +
+            "fCat.is_income AS isIncome, fCat.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
+            "FROM ft INNER JOIN fCat ON ft.category_id=fCat.category_id")
+    suspend fun getTransactionsFilterCategories(year: Int, categoriesIds: List<Int>): Map<Long, List<TransactionListItem>>
 
     @Query("SELECT block_id, category_id AS categoryId, standard_category_id, is_income AS isIncome FROM categories ")
     suspend fun getCategoriesList(): List<CategoriesFilter>

@@ -14,4 +14,5 @@
     <string name="all_selected">All Selected</string>
     <string name="all_income">All Income</string>
     <string name="all_expenses">All Expenses</string>
+    <string name="transactions">Transactions</string>
 </resources>

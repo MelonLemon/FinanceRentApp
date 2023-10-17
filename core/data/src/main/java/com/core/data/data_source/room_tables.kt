@@ -37,7 +37,7 @@ data class Transactions(
     @ColumnInfo(name = "block_id", index = true) val blockId: Int,
     @ColumnInfo(name = "category_id", index = true) val categoryId: Int,
     val amount: Int,
-    val currency_name: String,
+    @ColumnInfo(name = "currency_name") val currencyName: String,
     val year: Int,
     val month: Int,
     @ColumnInfo(name = "current_date") val currentDate: Long,

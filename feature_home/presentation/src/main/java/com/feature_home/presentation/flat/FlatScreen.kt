@@ -159,7 +159,10 @@ fun FlatScreen(
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             style = MaterialTheme.typography.headlineMedium
                         )
-                        LazyRow(){
+                        LazyRow(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ){
                             items(
                                 items = flatState.finResults,
                                 key = {finResult ->
@@ -279,6 +282,9 @@ fun FlatScreen(
                             }
                         )
                     }
+                }
+                item{
+                    Text(text= stringResource(R.string.transactions))
                 }
                 items(
                     items = flatState.transactionsDisplay,

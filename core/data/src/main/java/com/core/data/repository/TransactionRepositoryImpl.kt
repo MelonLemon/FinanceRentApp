@@ -8,6 +8,7 @@ import com.core.common.util.toLocalDate
 import com.core.data.data_source.RentCountDao
 import com.feature_transactions.domain.model.AllTransactionsDay
 import com.feature_transactions.domain.model.CategoriesFilter
+import com.feature_transactions.domain.model.TransactionListItem
 import com.feature_transactions.domain.model.TransactionMonth
 import com.feature_transactions.domain.repository.TransactionRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,9 +29,23 @@ class TransactionRepositoryImpl  @Inject constructor(
         currency: Currency
     ): List<TransactionMonth> {
         Log.d("Transactions", "Begin Repository GetFilteredTransactions")
-        val transactions = dao.getTransactions(
-            year = year, months=months, categoriesIds=categoriesIds
-        )
+
+        var transactions = emptyMap<Long, List<TransactionListItem>>()
+
+        when {
+            months==null && categoriesIds==null -> {
+                transactions = dao.getTransactionsWithoutFilters(year=year)
+            }
+            months!=null && categoriesIds!=null -> {
+                transactions = dao.getTransactionsFiltered(year=year, months=months, categoriesIds=categoriesIds)
+            }
+            months!=null && categoriesIds==null -> {
+                transactions = dao.getTransactionsFilterMonths(year=year, months=months)
+            }
+            months==null && categoriesIds!=null -> {
+                transactions = dao.getTransactionsFilterCategories(year=year, categoriesIds=categoriesIds)
+            }
+        }
         Log.d("Transactions", "Before return Repository: $transactions")
         return if(transactions.isEmpty()){
             emptyList()

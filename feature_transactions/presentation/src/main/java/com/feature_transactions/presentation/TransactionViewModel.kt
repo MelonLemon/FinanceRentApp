@@ -127,14 +127,9 @@ class TransactionViewModel @Inject constructor(
             )
             val (result, transactions) = useCases.getFilteredTransactions(
                 year = filterState.value.periodFilterState.selectedYear,
-                months = if(filterState.value.periodFilterState.isAllMonthsSelected) null else filterState.value.periodFilterState.months,
+                months = null,
                 currency = currency.value,
-                categoriesIds = useCases.getFilteredCategoriesId(
-                    categoriesFilterList = filterState.value.categoriesFilterList,
-                    blockIds = if(filterState.value.sectionsFilterState.isAllSelected) null else filterState.value.sectionsFilterState.listOfSelectedBlIds,
-                    selectedIncomeCatId = if(filterState.value.categoryFilterState.isAllIncomeSelected) null else filterState.value.categoryFilterState.selectedIncomeCatId,
-                    selectedExpensesCatId = if(filterState.value.categoryFilterState.isAllExpensesSelected) null else filterState.value.categoryFilterState.selectedExpensesCatId
-                )
+                categoriesIds = null
             )
             if(result && transactions!=null){
                 _filteredTransactionsByMonth.value = transactions

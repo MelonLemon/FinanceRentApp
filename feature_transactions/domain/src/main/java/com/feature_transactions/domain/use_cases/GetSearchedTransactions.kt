@@ -1,5 +1,6 @@
 package com.feature_transactions.domain.use_cases
 
+import android.util.Log
 import com.feature_transactions.domain.model.TransactionMonth
 
 class GetSearchedTransactions  {
@@ -19,6 +20,7 @@ class GetSearchedTransactions  {
             }
             return newFiltered
         } else {
+            Log.d("Transactions", "InSearchedTransactions as should")
             return  transactionMonth
         }
     }
