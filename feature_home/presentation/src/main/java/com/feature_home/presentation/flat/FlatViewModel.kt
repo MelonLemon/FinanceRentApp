@@ -1,6 +1,7 @@
 package com.feature_home.presentation.flat
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -72,11 +73,9 @@ class FlatViewModel@Inject constructor(
         emptyList()
     )
 
-    private val listRentDates = useCases.getListRentDates(flatId = flatId).stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        emptyList()
-    )
+    private val _listRentDates = MutableStateFlow(emptyList<Long>())
+    private val listRentDates  = _listRentDates.asStateFlow()
+
 
     val flatState  = combine(independentFlatState, guests, transactionsDisplay, finResults, listRentDates){ independentFlatState, guests, transactionsDisplay, finResults, listRentDates ->
         FlatState(
@@ -122,6 +121,9 @@ class FlatViewModel@Inject constructor(
                 expensesCategories = expensesCategories,
                 selectedCategoryId = expensesCategories[0].id,
             )
+            val listRentDates = useCases.getListRentDates(flatId)
+            Log.d("Dates", "listRentDates: $listRentDates")
+            _listRentDates.value =  listRentDates
         }
 
     }
@@ -173,23 +175,28 @@ class FlatViewModel@Inject constructor(
             }
             is FlatScreenEvents.OnGuestAddEdit -> {
                 viewModelScope.launch {
-
-                    val result = if(event.guestInfo.id==null)
+                    Log.d("New Guest", "OnGuestAddEdit")
+                    var result = false
+                    result = if(event.guestInfo.id==null){
                         useCases.addNewGuest(
                             flatId = flatId,
                             fullGuestInfo = event.guestInfo,
                             currency_name = flatState.value.currencyState.selectedCurrency.displayName,
                             month = flatState.value.yearMonth)
-                        else
-                            useCases.editGuest(
-                                flatId = flatId,
-                                fullGuestInfo = event.guestInfo,
-                                oldFullGuestInfo = flatState.value.guestDialogGuestInfo,
-                                currency_name = flatState.value.currencyState.selectedCurrency.displayName,
-                                month = flatState.value.yearMonth)
-
-                    if(!result){
-                        _onFlatUiEvents.emit(FlatUiEvents.ErrorMsgUnknown)
+                    } else {
+                        useCases.editGuest(
+                            flatId = flatId,
+                            fullGuestInfo = event.guestInfo,
+                            oldFullGuestInfo = flatState.value.guestDialogGuestInfo,
+                            currency_name = flatState.value.currencyState.selectedCurrency.displayName,
+                            month = flatState.value.yearMonth
+                        )
+                    }
+                    if(result) {
+                        _listRentDates.value = useCases.getListRentDates(flatId)
+                        _onFlatUiEvents.emit(FlatUiEvents.CloseGuestDialog)
+                    } else {
+                        _onFlatUiEvents.emit(FlatUiEvents.CloseGuestDialogWithError)
                     }
                 }
             }

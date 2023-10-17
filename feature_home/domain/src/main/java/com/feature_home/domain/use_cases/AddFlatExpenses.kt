@@ -14,7 +14,7 @@ class AddFlatExpenses  @Inject constructor(
         currency_name: String,
         month: YearMonth
     ): Boolean {
-        return if(expensesCategoryId==-1) {
+        return if(expensesCategoryId!=-1) {
             try {
                 repository.addFlatExpenses(
                     flatId = flatId,

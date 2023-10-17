@@ -1,20 +1,18 @@
 package com.feature_transactions.presentation
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.feature_transactions.domain.model.TransactionMonth
 import com.feature_transactions.domain.use_cases.TransactionUseCases
-import com.feature_transactions.presentation.util.CategoryFilterState
 import com.feature_transactions.presentation.util.FilterState
 import com.feature_transactions.presentation.util.PeriodFilterState
-import com.feature_transactions.presentation.util.SectionsFilterState
 import com.feature_transactions.presentation.util.TransactionScreenEvents
 import com.feature_transactions.presentation.util.TransactionState
 import com.feature_transactions.presentation.util.TransactionsUiEvents
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +21,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -117,17 +114,34 @@ class TransactionViewModel @Inject constructor(
         viewModelScope.launch {
             val categoriesFilterList = useCases.getCategoriesList()
             val years = useCases.getYearsList()
-            val (listOfFlats, listOfSections) = useCases.getFlatsSections()
+            val listOfBlocks = useCases.getBlocks()
+
             _filterState.value = filterState.value.copy(
                 categoriesFilterList = categoriesFilterList,
                 periodFilterState = filterState.value.periodFilterState.copy(
                     years = years.ifEmpty { filterState.value.periodFilterState.years }
                 ),
                 sectionsFilterState = filterState.value.sectionsFilterState.copy(
-                    listOfSections = listOfFlats,
-                    listOfFlats = listOfSections
+                    listOfBlocks = listOfBlocks,
                 )
             )
+            val (result, transactions) = useCases.getFilteredTransactions(
+                year = filterState.value.periodFilterState.selectedYear,
+                months = if(filterState.value.periodFilterState.isAllMonthsSelected) null else filterState.value.periodFilterState.months,
+                currency = currency.value,
+                categoriesIds = useCases.getFilteredCategoriesId(
+                    categoriesFilterList = filterState.value.categoriesFilterList,
+                    blockIds = if(filterState.value.sectionsFilterState.isAllSelected) null else filterState.value.sectionsFilterState.listOfSelectedBlIds,
+                    selectedIncomeCatId = if(filterState.value.categoryFilterState.isAllIncomeSelected) null else filterState.value.categoryFilterState.selectedIncomeCatId,
+                    selectedExpensesCatId = if(filterState.value.categoryFilterState.isAllExpensesSelected) null else filterState.value.categoryFilterState.selectedExpensesCatId
+                )
+            )
+            if(result && transactions!=null){
+                _filteredTransactionsByMonth.value = transactions
+            } else {
+                Log.d("Transactions", "Transactions in Init Fail")
+            }
+
             _isDownloading.value = false
         }
 
@@ -149,7 +163,7 @@ class TransactionViewModel @Inject constructor(
                         currency = currency.value,
                         categoriesIds = useCases.getFilteredCategoriesId(
                             categoriesFilterList = filterState.value.categoriesFilterList,
-                            blockIds = if(event.sectionsFilterState.isAllSectionsSelected) null else event.sectionsFilterState.listOfSelectedFlatIds + event.sectionsFilterState.listOfSelectedSecIds,
+                            blockIds = if(event.sectionsFilterState.isAllSelected) null else event.sectionsFilterState.listOfSelectedBlIds,
                             selectedIncomeCatId = if(event.categoryFilterState.isAllIncomeSelected) null else event.categoryFilterState.selectedIncomeCatId,
                             selectedExpensesCatId = if(event.categoryFilterState.isAllExpensesSelected) null else event.categoryFilterState.selectedExpensesCatId
                         )

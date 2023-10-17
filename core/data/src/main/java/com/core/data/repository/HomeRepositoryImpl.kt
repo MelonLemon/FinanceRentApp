@@ -1,6 +1,7 @@
 package com.core.data.repository
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.util.toRange
 import com.core.common.util.ExpensesCategories
@@ -14,7 +15,6 @@ import com.core.data.data_source.RentsTrack
 import com.core.data.data_source.Transactions
 import com.core.data.data_source.util.FLAT_CATEGORY
 import com.core.data.data_source.util.SECTION_CATEGORY
-import com.core.data.data_source.util.getListOfTracks
 import com.feature_home.domain.model.AdditionalInfo
 import com.feature_home.domain.model.FinCategory
 import com.feature_home.domain.model.FinFlatState
@@ -269,7 +269,7 @@ class HomeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getExpensesCategories(flatId: Int): List<FinCategory> {
-        return dao.getCatById(block_id = flatId)
+        return dao.getExpCatById(block_id = flatId)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -280,8 +280,7 @@ class HomeRepositoryImpl @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getGuests(yearMonth: YearMonth, flatId: Int): Flow<List<FullGuestInfo>> {
-        return dao.getAllRentsMonth(block_id = flatId, start_date = yearMonth.atDay(1).toEpochDay(),
-            end_date = yearMonth.atEndOfMonth().toEpochDay())
+        return dao.getAllRentsMonth(block_id = flatId, year=yearMonth.year, month=yearMonth.monthValue)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -294,8 +293,8 @@ class HomeRepositoryImpl @Inject constructor(
         return dao.getFinResultFlatMonthly(flatId, year= Year.now().value)
     }
 
-    override fun getListRentDates(flatId: Int): Flow<List<RentDates>> {
-        return dao.getAllRentDates()
+    override suspend fun getListRentDates(flatId: Int): List<Long> {
+        return dao.getAllRentDates(flatId=flatId)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -305,26 +304,36 @@ class HomeRepositoryImpl @Inject constructor(
         }
         val startDate = fullGuestInfo.start_date!!.toLocalDate()
         val endDate = fullGuestInfo.end_date!!.toLocalDate()
-        val nights = ChronoUnit.DAYS.between(startDate, endDate).toInt()
-        val listOfTracks = getListOfTracks(fullGuestInfo)
         val currentDate = LocalDate.now().toEpochDay()
-        dao.addNewRentInfo(
-            rents = Rents(
-               rentId = null,
-               blockId =  flatId,
-                name = fullGuestInfo.name,
-                phone = fullGuestInfo.phone,
-                comment = fullGuestInfo.comment,
-                startDate = fullGuestInfo.start_date,
-                endDate = fullGuestInfo.end_date,
-                forNight = fullGuestInfo.for_night,
-                forAllNights = fullGuestInfo.for_all_nights,
-                nights = nights,
-                isPaid = fullGuestInfo.is_paid),
-            currency_name = currency_name,
-            listOfTracks = listOfTracks,
-            currentDate=currentDate
-        )
+        val nights = ChronoUnit.DAYS.between(startDate, endDate).toInt()
+        val listOfTracks = mutableListOf<RentsTrack>()
+        if(YearMonth.from(startDate)==YearMonth.from(endDate)) {
+            if (startDate != null) {
+                dao.addNewGuest(
+                    rents = Rents(
+                        rentId = null,
+                        blockId =  flatId,
+                        name = fullGuestInfo.name,
+                        phone = fullGuestInfo.phone,
+                        comment = fullGuestInfo.comment,
+                        startDate = fullGuestInfo.start_date!!,
+                        endDate = fullGuestInfo.end_date!!,
+                        forNight = fullGuestInfo.for_night,
+                        forAllNights = fullGuestInfo.for_all_nights,
+                        nights = nights,
+                        isPaid = fullGuestInfo.is_paid),
+                    currency_name = currency_name,
+                    currentDate=currentDate,
+                    month=startDate.monthValue,
+                    year=startDate.year
+                )
+                Log.d("New Guest", "Add new Guest successfully!")
+            }
+
+        } else {
+
+        }
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -344,8 +353,8 @@ class HomeRepositoryImpl @Inject constructor(
             name = fullGuestInfo.name,
             phone = fullGuestInfo.phone,
             comment = fullGuestInfo.comment,
-            startDate = fullGuestInfo.start_date,
-            endDate = fullGuestInfo.end_date,
+            startDate = fullGuestInfo.start_date!!,
+            endDate = fullGuestInfo.end_date!!,
             forNight = fullGuestInfo.for_night,
             forAllNights = fullGuestInfo.for_all_nights,
             nights = nights,
@@ -358,7 +367,7 @@ class HomeRepositoryImpl @Inject constructor(
                 currentDate= currentDate
             )
         } else{
-            val listOfTracks = getListOfTracks(fullGuestInfo)
+            val listOfTracks = mutableListOf<RentsTrack>() //change
             dao.renewRentDates(
                 rents = newRent,
                 currency_name = currency_name,

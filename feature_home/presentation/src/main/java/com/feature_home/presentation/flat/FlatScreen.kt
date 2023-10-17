@@ -1,6 +1,7 @@
 package com.feature_home.presentation.flat
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +44,7 @@ import com.core.common.components.MoneyText
 import com.core.common.components.MonthYearDisplay
 import com.core.common.util.ExpensesCategories
 import com.core.common.util.IncomeCategories
+import com.feature_home.domain.model.FinCategory
 import com.feature_home.presentation.R
 import com.feature_home.presentation.components.FinResultFlatCard
 import com.feature_home.presentation.components.GuestCard
@@ -65,6 +68,13 @@ fun FlatScreen(
     flatUiEvents: SharedFlow<FlatUiEvents>,
     backToHomeScreen: () -> Unit
 ) {
+    //Basic Category Income
+    val basicCategory = FinCategory(
+        id=1,
+        standard_category_id = 6,
+        name= stringResource(R.string.paid_rent)
+    )
+
     //BottomSheet
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -86,6 +96,13 @@ fun FlatScreen(
                 is FlatUiEvents.CloseGuestDialog -> {
                     guestModalSheetVisibility = false
                 }
+                is FlatUiEvents.CloseGuestDialogWithError -> {
+                    guestModalSheetVisibility = false
+                    snackbarHostState.showSnackbar(
+                        message = unknownError,
+                        actionLabel = null
+                    )
+                }
                 is FlatUiEvents.CloseYearMonthDialog -> {
                     yearMonthDialogVisibility = false
                 }
@@ -100,9 +117,11 @@ fun FlatScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().background(
-            MaterialTheme.colorScheme.background
-        ),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                MaterialTheme.colorScheme.background
+            ),
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         }
@@ -112,7 +131,9 @@ fun FlatScreen(
         } else {
 
             Column(
-                modifier = Modifier.padding(innerPadding).background(Color.Transparent)
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .background(Color.Transparent)
             ) {
                 BackToNavigationRow(
                     text=flatState.flatName,
@@ -188,9 +209,9 @@ fun FlatScreen(
                             guest.name
                         }
                     ){ guest ->
-                        val listInfo = listOf<String>()
+                        Log.d("Guests", "start_date: ${guest.start_date}, end_date:${guest.end_date}")
                         GuestCard(
-                            listInfo = listInfo,
+                            listInfo = listOf(guest.comment),
                             guest_name = guest.name,
                             amount = guest.for_all_nights,
                             currency = flatState.currencyState.selectedCurrency,
@@ -203,7 +224,9 @@ fun FlatScreen(
                             },
                             onCardClick = {
                                 flatEvents(FlatScreenEvents.OpenGuestDialog(guest))
-                            }
+                            },
+                            startDate = guest.start_date!!,
+                            endDate = guest.end_date!!
                         )
                     }
 
@@ -221,9 +244,11 @@ fun FlatScreen(
                                     "${section.id} + ${section.name}"
                                 }
                             ){expenses_category ->
-                                val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
+                                Log.d("Expenses", "expenses_category:$expenses_category ")
+
+                                val iconExp = ExpensesCategories.getExpIcon(expenses_category.standard_category_id)
                                 IconCard(
-                                    icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
+                                    icon = if(iconExp!=null) ImageVector.vectorResource(id = iconExp) else Icons.Default.Info,
                                     supportingText = expenses_category.name,
                                     onCardClick = {
                                         flatEvents(FlatScreenEvents.OnCategoryClick(expenses_category.id))
@@ -254,23 +279,25 @@ fun FlatScreen(
                             }
                         )
                     }
-
-                    items(
-                        items = flatState.transactionsDisplay,
-                        key = { transaction ->
-                            "${transaction.id}EXP"
-                        }
-                    ){transaction ->
-                        val category = flatState.expensesCategories.first { it.id==transaction.categoryId}
-                        val icon = if(transaction.isIncome) IncomeCategories.getIcon(category.standard_category_id) else
-                            ExpensesCategories.getIcon(category.standard_category_id)
-                        TransactionCard(
-                            title = category.name,
-                            icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
-                            amount = transaction.amount,
-                            currency = flatState.currencyState.selectedCurrency,
-                        )
+                }
+                items(
+                    items = flatState.transactionsDisplay,
+                    key = { transaction ->
+                        "${transaction.id}EXP"
                     }
+                ){transaction ->
+                    Log.d("Expenses", "transaction:$transaction ")
+                    Log.d("Expenses", "flatState.expensesCategories:${flatState.expensesCategories} ")
+
+                    val category = if(transaction.isIncome) basicCategory else flatState.expensesCategories.first { it.id==transaction.categoryId}
+                    val icon = if(transaction.isIncome) IncomeCategories.getIncIcon(category.standard_category_id) else
+                        ExpensesCategories.getExpIcon(category.standard_category_id)
+                    TransactionCard(
+                        title = category.name,
+                        icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
+                        amount = transaction.amount,
+                        currency = flatState.currencyState.selectedCurrency,
+                    )
                 }
 
             }

@@ -83,6 +83,15 @@ fun TransactionScreen(
                         actionLabel = null
                     )
                 }
+                is TransactionsUiEvents.CloseFilterBottomSheetWithError -> {
+                    filterModalSheetVisibility = false
+                    snackbarHostState.showSnackbar(
+                        message = unknownError,
+                        actionLabel = null
+                    )
+                }
+
+
 
 
             }
@@ -92,7 +101,7 @@ fun TransactionScreen(
 
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         snackbarHost = {
             SnackbarHost(snackbarHostState)
         }
@@ -168,8 +177,6 @@ fun TransactionScreen(
 
                 }
             }
-
-
         }
         
         if(filterModalSheetVisibility){

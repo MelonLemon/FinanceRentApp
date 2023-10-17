@@ -18,13 +18,9 @@ data class PeriodFilterState(
 )
 
 data class SectionsFilterState(
-    val listOfSections: List<SimpleItem> = emptyList(),
-    val listOfSelectedSecIds: List<Int> = emptyList(),
-    val isAllSelected: Boolean = true,
-    val isFlatSelected: Boolean = true,
-    val listOfFlats: List<SimpleItem> = emptyList(),
-    val listOfSelectedFlatIds: List<Int> = emptyList(),
-    val isAllSectionsSelected: Boolean = true
+    val listOfBlocks: List<SimpleItem> = emptyList(),
+    val listOfSelectedBlIds: List<Int> = emptyList(),
+    val isAllSelected: Boolean = true
 )
 
 data class CategoryFilterState(

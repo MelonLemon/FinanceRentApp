@@ -170,28 +170,31 @@ fun CloseNavigationRow(
     text: String,
     onBtnClick: () -> Unit,
     btnText: String,
-    icon: ImageVector = Icons.Default.Close
+    icon: ImageVector = Icons.Default.Close,
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
+    btnColor: Color = MaterialTheme.colorScheme.primaryContainer
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                MaterialTheme.colorScheme.primaryContainer
+                backgroundColor
             ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
+        horizontalArrangement = Arrangement.SpaceBetween
     ){
         Text(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier,
             text = text,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = textColor,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium
         )
         Button(
             onClick = onBtnClick,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent
+                containerColor = btnColor
             )
         ) {
             Text(text=btnText)

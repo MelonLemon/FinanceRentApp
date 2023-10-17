@@ -6,5 +6,5 @@ data class TransactionUseCases(
     val getFilteredCategoriesId: GetFilteredCategoriesId,
     val getCategoriesList: GetCategoriesList,
     val getYearsList: GetYearsList,
-    val getFlatsSections: GetFlatsSections
+    val getBlocks: GetBlocks
 )

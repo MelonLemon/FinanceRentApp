@@ -44,35 +44,26 @@ class RentCountDaoTest{
     }
 
     @Test
-    fun getSectionTransactionsBYMonth_checkResult() = runBlocking {
+    fun getAddRent_checkResult() = runBlocking {
         val dictionary = TestDictionary()
-        rentDao.addNewBlock(dictionary.sampleBlock)
-        rentDao.addNewBlock(dictionary.sampleBlock2)
-        rentDao.addNewBlock(dictionary.sampleBlock3)
-        rentDao.addNewCategory(dictionary.sampleExpensesCategories)
-        rentDao.addNewCategory(dictionary.sampleExpensesCategories2)
-        rentDao.addNewCategory(dictionary.sampleExpensesCategories3)
-        rentDao.addNewCategory(dictionary.sampleExpensesCategories4)
-        rentDao.addNewTransaction(dictionary.sampleTransactions)
-        rentDao.addNewTransaction(dictionary.sampleTransactions.copy(
-            categoryId = 1,
-            amount = -150
-        ))
-        rentDao.addNewTransaction(
-            dictionary.sampleTransactions.copy(
-                blockId = 2,
-                categoryId = 4
+        rentDao.addNewBlock(dictionary.flat1)
+        rentDao.addNewCategory(dictionary.incomeCatFlat1)
+        val rentId =  rentDao.addNewRent(
+            rents = dictionary.rentsFlat1
+        ).toInt()
+        rentDao.addRentTrack(
+            rentsTrack = dictionary.rentsTrackFlat1.copy(
+                rentId = rentId
             )
         )
+        println("RentId: $rentId")
+    }
 
-        val outputMap = rentDao.getSectionTransactionsBYMonth(
-            year = 2023,
-            month= 10,
-            blocksId = listOf(1, 3)
-        )
 
-        println("Start date: $outputMap")
-        assertEquals(1, outputMap.size)
+    @Test
+    fun getSectionTransactionsBYMonth_checkResult() = runBlocking {
+        val dictionary = TestDictionary()
+
 
     }
 
@@ -97,44 +88,45 @@ class TestDispatcherRule(
 }
 
 class TestDictionary{
-    val today = LocalDate.now().toEpochDay()
-    val sampleBlock = Blocks(
+    private val today = LocalDate.now().toEpochDay()
+    private val todayPlus = LocalDate.now().plusDays(6).toEpochDay()
+    val flat1 = Blocks(
         blockId = 1,
         blockCategory = FLAT_CATEGORY,
         name = "First Flat"
     )
-    val sampleBlock2 = Blocks(
+    val flat2 = Blocks(
         blockId = 2,
         blockCategory = FLAT_CATEGORY,
         name = "Second Flat"
     )
-    val sampleBlock3 = Blocks(
+    val section1 = Blocks(
         blockId = 3,
         blockCategory = SECTION_CATEGORY,
         name = "Second Flat"
     )
-    val sampleExpensesCategories = Categories(
+    val expensesFlat1 = Categories(
         categoryId = 1,
         blockId = 1,
         standardCategoryId = 1,
         isIncome = false,
         name = "Expenses main"
     )
-    val sampleExpensesCategories2 = Categories(
+    val expensesFlat2 = Categories(
         categoryId = 2,
         blockId = 2,
         standardCategoryId = 1,
         isIncome = false,
         name = "Expenses main"
     )
-    val sampleExpensesCategories3 = Categories(
+    val incomeCatFlat1 = Categories(
         categoryId = 3,
         blockId = 1,
         standardCategoryId = 1,
         isIncome = true,
         name = "Income main"
     )
-    val sampleExpensesCategories4 = Categories(
+    val incomeCatFlat2 = Categories(
         categoryId = 4,
         blockId = 2,
         standardCategoryId = 1,
@@ -142,7 +134,7 @@ class TestDictionary{
         name = "Income main"
     )
 
-    val sampleTransactions = Transactions(
+    val transactionIncomeFlat1 = Transactions(
         transactionId = null,
         blockId = 1,
         categoryId = 3,
@@ -152,6 +144,31 @@ class TestDictionary{
         month = 10,
         currentDate = today,
         comment = ""
+    )
+
+    val rentsFlat1 = Rents(
+        rentId = null,
+        blockId = flat1.blockId!!,
+        name="Rita",
+        phone="9067856467",
+        comment="With Dog",
+        startDate = today,
+        endDate = todayPlus,
+        forNight = 1000,
+        forAllNights = 6000,
+        nights=6,
+        isPaid=false
+    )
+
+    val rentsTrackFlat1 = RentsTrack(
+        trackId = null,
+        rentId = -1,
+        year=2023,
+        month=10,
+        nights=6,
+        amount=6000,
+        isPaid = false,
+        transaction_id = null
     )
 
 }

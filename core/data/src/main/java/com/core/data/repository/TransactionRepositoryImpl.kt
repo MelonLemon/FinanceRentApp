@@ -1,6 +1,7 @@
 package com.core.data.repository
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.core.common.util.SimpleItem
 import com.core.common.util.toLocalDate
@@ -26,10 +27,11 @@ class TransactionRepositoryImpl  @Inject constructor(
         categoriesIds: List<Int>?,
         currency: Currency
     ): List<TransactionMonth> {
+        Log.d("Transactions", "Begin Repository GetFilteredTransactions")
         val transactions = dao.getTransactions(
             year = year, months=months, categoriesIds=categoriesIds
         )
-
+        Log.d("Transactions", "Before return Repository: $transactions")
         return if(transactions.isEmpty()){
             emptyList()
             } else {
@@ -62,8 +64,8 @@ class TransactionRepositoryImpl  @Inject constructor(
         return dao.getYearsList()
     }
 
-    override suspend fun getFlatsSections(): Pair<List<SimpleItem>, List<SimpleItem>> {
-        return dao.getFlatsSections()
+    override suspend fun getBlocks(): List<SimpleItem> {
+        return dao.getBlocks()
     }
 
 }

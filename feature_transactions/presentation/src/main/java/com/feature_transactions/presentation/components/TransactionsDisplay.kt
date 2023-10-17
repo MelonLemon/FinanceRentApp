@@ -43,8 +43,8 @@ fun LazyListScope.transactionDay(
             "title"+index+item.id
         }
     ){ index, item ->
-        val icon = if(item.isIncome) IncomeCategories.getIcon(item.standard_category_id) else
-            ExpensesCategories.getIcon(item.standard_category_id)
+        val icon = if(item.isIncome) IncomeCategories.getIncIcon(item.standard_category_id) else
+            ExpensesCategories.getExpIcon(item.standard_category_id)
         TransactionRow(
             categoryName = item.categoryName,
             comment = item.comment,

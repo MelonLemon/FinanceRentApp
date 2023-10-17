@@ -1,5 +1,6 @@
 package com.core.data.data_source
 
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.MapInfo
@@ -82,13 +83,8 @@ interface RentCountDao {
     @Query("SELECT block_id AS id, name FROM blocks WHERE block_category=:category")
     suspend fun getBlocksSIByCat(category: String):List<SimpleItem>
 
-    @Transaction
-    suspend fun getFlatsSections():Pair<List<SimpleItem>, List<SimpleItem>> {
-        val flats = getBlocksSIByCat(category = FLAT_CATEGORY)
-        val sections = getBlocksSIByCat(category = SECTION_CATEGORY)
-
-        return Pair(flats, sections)
-    }
+    @Query("SELECT block_id AS id, name FROM blocks")
+    suspend fun getBlocks():List<SimpleItem>
 
     //TRANSACTIONS
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -123,6 +119,9 @@ interface RentCountDao {
 
     @Query("SELECT category_id as id, standard_category_id, name FROM categories WHERE block_id=:block_id")
     suspend fun getCatById(block_id: Int):List<FinCategory>
+
+    @Query("SELECT category_id as id, standard_category_id, name FROM categories WHERE block_id=:block_id AND is_income=:is_income")
+    suspend fun getExpCatById(block_id: Int, is_income: Boolean=false):List<FinCategory>
 
     @Query("SELECT category_id FROM categories WHERE block_id=:block_id AND is_income=:is_income")
     suspend fun getCategoryFlat(block_id: Int, is_income: Boolean=true): Int
@@ -173,6 +172,40 @@ interface RentCountDao {
                 addRentTrack(track.copy(rentId = rentId))
             }
         }
+    }
+
+    @Transaction
+    suspend fun addNewGuest(rents: Rents, currency_name: String, currentDate: Long,  month: Int, year: Int){
+        val categoryId =  if(rents.isPaid) getCategoryFlat(block_id = rents.blockId) else 0
+        Log.d("New Guest", "Category Id: $categoryId")
+        val rentId = addNewRent(rents=rents).toInt()
+        Log.d("New Guest", "RentId: $rentId")
+        val transactionId = if(rents.isPaid) addNewTransaction(
+            Transactions(
+                transactionId = null,
+                blockId = rents.blockId,
+                categoryId = categoryId,
+                amount = rents.forAllNights,
+                currency_name = currency_name,
+                year = year,
+                month = month,
+                currentDate = currentDate,
+                comment = "${rents.name} - ${rents.nights}N - ${month}/${year}"
+            )
+        ).toInt() else null
+        Log.d("New Guest", "transactionId: $transactionId")
+        addRentTrack(
+            rentsTrack = RentsTrack(
+                trackId = null,
+                rentId = rentId,
+                year = year,
+                month = month,
+                nights = rents.nights,
+                amount = rents.forAllNights,
+                isPaid = rents.isPaid,
+                transaction_id = transactionId
+            ))
+        Log.d("New Guest", "RentsTrack successfully No way")
     }
 
     @Transaction
@@ -267,8 +300,23 @@ interface RentCountDao {
     @Query("SELECT sum(nights) FROM rents_track WHERE  year=:year AND month=:month")
     suspend fun getRentDays(year: Int, month:Int): Int?
 
-    @Query("SELECT list_full_days, list_half_days FROM rents_track ")
-    fun getAllRentDates(): Flow<List<RentDates>>
+
+    @Query("WITH RECURSIVE dates AS " +
+            "(SELECT rent_id, start_date, end_date " +
+            "FROM rents WHERE block_id=:flatId " +
+            "UNION ALL " +
+            "SELECT rent_id, (CAST(strftime('%s', datetime(start_date/1000, 'unixepoch', '+1 days')) AS INTEGER) * 1000)  AS start_date, end_date " +
+            "FROM dates " +
+            "WHERE (CAST(strftime('%s', datetime(start_date/1000, 'unixepoch', '+1 days')) AS INTEGER) * 1000) BETWEEN start_date AND end_date ), " +
+            "vacantDays AS " +
+            "(SELECT v.date as date FROM " +
+            "(SELECT start_date as date FROM rents WHERE block_id=:flatId " +
+            "UNION ALL " +
+            "SELECT end_date as date FROM rents WHERE block_id=:flatId " +
+            ") as v  GROUP BY date HAVING COUNT(date) = 1)" +
+            "SELECT DISTINCT start_date FROM dates" +
+            " WHERE start_date not in (SELECT date FROM vacantDays) ORDER BY start_date ")
+    suspend fun getAllRentDates(flatId: Int): List<Long>
 
     @Query("SELECT sum(amount) FROM rents_track WHERE  year=:year AND month=:month AND transaction_id is not null")
     suspend fun getPaidSumRent(year: Int, month:Int): Int?
@@ -286,11 +334,10 @@ interface RentCountDao {
     @Query("SELECT * FROM rents WHERE block_id=:block_id")
     suspend fun getRentById(block_id: Int): Rents
 
-
-
-    @Query("SELECT rent_id as id, start_date, end_date, name, phone, comment, for_night, for_all_nights, is_paid FROM rents " +
-            "WHERE block_id=:block_id AND ((start_date BETWEEN :start_date AND :end_date) OR (end_date BETWEEN :start_date AND :end_date))")
-    fun getAllRentsMonth(block_id: Int, start_date: Long, end_date: Long): Flow<List<FullGuestInfo>>
+    @Query("WITH rentsTrack AS (SELECT rent_id FROM rents_track WHERE year=:year AND month=:month) " +
+            "SELECT rent_id as id, start_date, end_date, name, phone, comment, for_night, for_all_nights, is_paid FROM rents " +
+            "WHERE block_id=:block_id AND rent_id IN rentsTrack")
+    fun getAllRentsMonth(block_id: Int, year: Int, month: Int): Flow<List<FullGuestInfo>>
 
     @MapInfo(keyColumn = "block_id")
     @Query("WITH filteredTransactions AS (SELECT * FROM transactions WHERE block_id IN (:blocksId) AND year=:year AND month=:month) " +
@@ -299,10 +346,9 @@ interface RentCountDao {
             "FROM filteredTransactions JOIN categories ON filteredTransactions.category_id=categories.category_id")
     suspend fun getSectionTransactionsBYMonth(year: Int, month: Int, blocksId: List<Int>): Map<Int, List<TransactionInfo>>
 
-
     @Query("WITH filteredTransactions AS (SELECT * FROM transactions WHERE block_id=:block_id AND year=:year AND month=:month) " +
-            "SELECT categories.category_id As id, categories.is_income AS isIncome, " +
-            "categories.standard_category_id AS categoryId, filteredTransactions.amount AS amount " +
+            "SELECT filteredTransactions.transaction_id As id, categories.is_income AS isIncome, " +
+            "categories.category_id AS categoryId, filteredTransactions.amount AS amount " +
             "FROM filteredTransactions JOIN categories ON filteredTransactions.category_id=categories.category_id")
     fun getTransactionsByBlockIdMonth(year: Int, month: Int, block_id: Int): Flow<List<TransactionInfo>>
 

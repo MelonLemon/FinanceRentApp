@@ -47,7 +47,7 @@ interface HomeRepository {
     fun getGuests(yearMonth: YearMonth, flatId: Int): Flow<List<FullGuestInfo>>
     fun getTransactions(yearMonth: YearMonth, flatId: Int): Flow<List<TransactionInfo>>
     fun getFinResultFlatMonthly(flatId: Int): Flow<List<FinResultsFlat>>
-    fun getListRentDates(flatId: Int): Flow<List<RentDates>>
+    suspend fun getListRentDates(flatId: Int): List<Long>
 
     suspend fun addNewGuest(flatId: Int, fullGuestInfo: FullGuestInfo, currency_name: String,  month:YearMonth)
     suspend fun editGuest(flatId: Int, fullGuestInfo: FullGuestInfo, oldFullGuestInfo: FullGuestInfo, currency_name: String, month:YearMonth)

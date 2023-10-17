@@ -1,6 +1,7 @@
 package com.feature_home.presentation.components
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,20 +11,15 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -31,7 +27,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -52,7 +47,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import com.core.common.components.AddNameWidget
 import com.core.common.components.IconCard
 import com.core.common.components.SearchInput
@@ -225,7 +219,7 @@ fun SectionBottomSheet(
                 ) {
                     if(isIncomeSelected){
                         tempSectionInfo.incomeCategories.forEach{category ->
-                            val icon = IncomeCategories.getIcon(category.standard_category_id)
+                            val icon = IncomeCategories.getIncIcon(category.standard_category_id)
                             IconCard(
                                 modifier = Modifier.width(92.dp),
                                 icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
@@ -234,7 +228,7 @@ fun SectionBottomSheet(
                         }
                     } else {
                         tempSectionInfo.expensesCategories.forEach{category ->
-                            val icon = ExpensesCategories.getIcon(category.standard_category_id)
+                            val icon = ExpensesCategories.getExpIcon(category.standard_category_id)
                             IconCard(
                                 modifier = Modifier.width(92.dp),
                                 icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
@@ -407,12 +401,12 @@ fun GuestInfoBottomSheet(
             (it >= fullGuestInfo.start_date!!) && (it <= fullGuestInfo.end_date!!)
         }
     }
-
+    Log.d("Dates", "Begin GuestInfoBottomSheet: $listDates")
     val state = rememberDateRangePickerState(
         initialDisplayMode = DisplayMode.Input,
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis !in  listDates
+                return !listDatesFilter.contains(utcTimeMillis)
             }
         },
         initialSelectedStartDateMillis = fullGuestInfo.start_date,
@@ -521,10 +515,12 @@ fun GuestInfoBottomSheet(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Button(onClick = {
-                if(state.selectedStartDateMillis!=null && state.selectedEndDateMillis!=null){
+                val startDate = state.selectedStartDateMillis
+                val endDate = state.selectedEndDateMillis
+                if(startDate!=null && endDate!=null){
                     onAgree(tempGuestInfo.copy(
-                        start_date = state.selectedStartDateMillis,
-                        end_date = state.selectedEndDateMillis
+                        start_date = startDate,
+                        end_date = endDate
                     ))
                 }
 

@@ -1,5 +1,6 @@
 package com.feature_transactions.domain.use_cases
 
+import android.util.Log
 import com.feature_transactions.domain.model.TransactionMonth
 import com.feature_transactions.domain.repository.TransactionRepository
 import javax.inject.Inject
@@ -16,10 +17,12 @@ class GetFilteredTransactions  @Inject constructor(
         currency: Currency
     ): Pair<Boolean, List<TransactionMonth>?>{
         return try {
+            Log.d("Transactions", "Begin GetFilteredTransactions")
             val transaction = repository.getFilteredTransactions(year=year, months=months,
                 categoriesIds=categoriesIds,
                 currency=currency
             )
+            Log.d("Transactions", "End GetFilteredTransactions: $transaction")
             Pair(true, transaction)
         } catch (e: Exception){
             Pair(false, null)

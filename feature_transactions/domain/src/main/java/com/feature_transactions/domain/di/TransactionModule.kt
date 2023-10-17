@@ -5,7 +5,7 @@ import com.feature_transactions.domain.use_cases.GetCategoriesList
 import com.feature_transactions.domain.use_cases.GetFilteredCategoriesId
 import com.feature_transactions.domain.use_cases.GetSearchedTransactions
 import com.feature_transactions.domain.use_cases.GetFilteredTransactions
-import com.feature_transactions.domain.use_cases.GetFlatsSections
+import com.feature_transactions.domain.use_cases.GetBlocks
 import com.feature_transactions.domain.use_cases.GetYearsList
 import com.feature_transactions.domain.use_cases.TransactionUseCases
 import dagger.Module
@@ -27,7 +27,7 @@ object TransactionModule {
             getFilteredCategoriesId = GetFilteredCategoriesId(),
             getCategoriesList = GetCategoriesList(repository),
             getYearsList = GetYearsList(repository),
-            getFlatsSections = GetFlatsSections(repository)
+            getBlocks = GetBlocks(repository)
         )
     }
 }

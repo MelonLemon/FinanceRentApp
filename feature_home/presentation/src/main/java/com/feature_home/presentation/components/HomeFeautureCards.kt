@@ -1,6 +1,8 @@
 package com.feature_home.presentation.components
 
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +32,7 @@ import com.core.common.components.EmptyContainer
 import com.core.common.components.IconCard
 import com.core.common.components.MarkedInfoDisplay
 import com.core.common.components.MoneyText
+import com.core.common.util.toLocalDate
 import com.feature_home.presentation.R
 import java.util.Currency
 
@@ -251,6 +254,7 @@ fun FlatCard(
         }}
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GuestCard(
@@ -259,6 +263,8 @@ fun GuestCard(
     guest_name: String,
     amount: Int,
     currency: Currency,
+    startDate: Long,
+    endDate: Long,
     is_paid: Boolean,
     onPaidSwitchChange: (Boolean) -> Unit,
     onCardClick: () -> Unit
@@ -267,14 +273,27 @@ fun GuestCard(
         onCardClick()
     }){
         Column(
+            modifier=Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.Start
         ){
-            Text(
-                text=guest_name,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                modifier=Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text=guest_name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text="${startDate.toLocalDate()}-${endDate.toLocalDate()}",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
             FlowRow(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -284,6 +303,7 @@ fun GuestCard(
                 }
             }
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {

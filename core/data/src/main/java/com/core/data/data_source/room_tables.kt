@@ -77,12 +77,12 @@ data class Categories(
 )
 data class Rents(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "rent_id", index = true) val rentId: Int?,
-    @ColumnInfo(name = "block_id") val blockId: Int,
+    @ColumnInfo(name = "block_id", index = true) val blockId: Int,
     val name: String,
     val phone: String,
     val comment: String,
-    @ColumnInfo(name = "start_date") val startDate: Long?,
-    @ColumnInfo(name = "end_date") val endDate: Long?,
+    @ColumnInfo(name = "start_date") val startDate: Long,
+    @ColumnInfo(name = "end_date") val endDate: Long,
     @ColumnInfo(name = "for_night") val forNight: Int,
     @ColumnInfo(name = "for_all_nights") val forAllNights: Int,
     @ColumnInfo(name = "nights") val nights: Int,
@@ -102,12 +102,10 @@ data class Rents(
 )
 data class RentsTrack(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "track_id", index = true) val trackId: Int?,
-    @ColumnInfo(name = "rent_id") val rentId: Int,
+    @ColumnInfo(name = "rent_id", index = true) val rentId: Int,
     val year: Int,
     val month: Int,
     @ColumnInfo(name = "nights") val nights: Int,
-    @ColumnInfo(name = "list_full_days") val listDates: List<Long>?,
-    @ColumnInfo(name = "list_half_days") val listHalfDates: List<Long>?,
     val amount: Int,
     @ColumnInfo(name = "is_paid") val isPaid: Boolean,
     @ColumnInfo(name = "transaction_id") val transaction_id: Int?,

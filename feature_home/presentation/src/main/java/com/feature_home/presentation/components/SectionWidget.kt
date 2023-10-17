@@ -1,7 +1,6 @@
 package com.feature_home.presentation.components
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -87,7 +86,7 @@ fun LazyListScope.sectionBlock(
                     }
 
                 ){ income_category ->
-                    val icon = IncomeCategories.getIcon(income_category.standard_category_id)
+                    val icon = IncomeCategories.getIncIcon(income_category.standard_category_id)
                     IconCard(
                         icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                         supportingText = income_category.name,
@@ -104,7 +103,7 @@ fun LazyListScope.sectionBlock(
                         "${section.id} + ${section.name}"
                     }
                 ){expenses_category ->
-                    val icon = ExpensesCategories.getIcon(expenses_category.standard_category_id)
+                    val icon = ExpensesCategories.getExpIcon(expenses_category.standard_category_id)
                     IconCard(
                         icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                         supportingText = expenses_category.name,
@@ -143,10 +142,9 @@ fun LazyListScope.sectionBlock(
 
         val category = if(transaction.isIncome) sectionInfo.incomeCategories.first { it.id==transaction.categoryId}
         else sectionInfo.expensesCategories.first { it.id==transaction.categoryId}
-        val icon = if(transaction.isIncome) IncomeCategories.getIcon(category.standard_category_id) else
-            ExpensesCategories.getIcon(category.standard_category_id)
-        println("category: $category")
-        println("icon: $icon")
+        val icon = if(transaction.isIncome) IncomeCategories.getIncIcon(category.standard_category_id) else
+            ExpensesCategories.getExpIcon(category.standard_category_id)
+
         TransactionCard(
             title = category.name,
             icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
