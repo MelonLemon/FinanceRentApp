@@ -607,21 +607,21 @@ interface RentCountDao {
             "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, fCat.standard_category_id AS standard_category_id, " +
             "fCat.is_income AS isIncome, fCat.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
             "FROM ft INNER JOIN fCat ON ft.category_id=fCat.category_id")
-    suspend fun getTransactionsFiltered(year: Int, months: List<Int>, categoriesIds: List<Int>): Map<Long, List<TransactionListItem>>
+    fun getTransactionsFiltered(year: Int, months: List<Int>, categoriesIds: List<Int>): Flow<Map<Long, List<TransactionListItem>>>
 
     @MapInfo(keyColumn = "date")
     @Query("WITH ft AS (SELECT * FROM transactions WHERE (year=:year)) " +
             "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, categories.standard_category_id AS standard_category_id, " +
             "categories.is_income AS isIncome, categories.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
             "FROM ft INNER JOIN categories ON ft.category_id=categories.category_id")
-    suspend fun getTransactionsWithoutFilters(year: Int): Map<Long, List<TransactionListItem>>
+    fun getTransactionsWithoutFilters(year: Int): Flow<Map<Long, List<TransactionListItem>>>
 
     @MapInfo(keyColumn = "date")
     @Query("WITH ft AS (SELECT * FROM transactions WHERE year=:year AND month IN (:months)) " +
             "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, categories.standard_category_id AS standard_category_id, " +
             "categories.is_income AS isIncome, categories.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
             "FROM ft INNER JOIN categories ON ft.category_id=categories.category_id")
-    suspend fun getTransactionsFilterMonths(year: Int, months: List<Int>): Map<Long, List<TransactionListItem>>
+    fun getTransactionsFilterMonths(year: Int, months: List<Int>): Flow<Map<Long, List<TransactionListItem>>>
 
     @MapInfo(keyColumn = "date")
     @Query("WITH ft AS (SELECT * FROM transactions WHERE year=:year ), " +
@@ -629,7 +629,7 @@ interface RentCountDao {
             "SELECT ft.`current_date` AS date, ft.transaction_id AS id, ft.category_id AS categoryId, fCat.standard_category_id AS standard_category_id, " +
             "fCat.is_income AS isIncome, fCat.name AS categoryName, ft.comment AS comment, ft.amount as amount, ft.currency_name AS currency " +
             "FROM ft INNER JOIN fCat ON ft.category_id=fCat.category_id")
-    suspend fun getTransactionsFilterCategories(year: Int, categoriesIds: List<Int>): Map<Long, List<TransactionListItem>>
+    fun getTransactionsFilterCategories(year: Int, categoriesIds: List<Int>): Flow<Map<Long, List<TransactionListItem>>>
 
     @Query("SELECT block_id, category_id AS categoryId, standard_category_id, is_income AS isIncome FROM categories ")
     suspend fun getCategoriesList(): List<CategoriesFilter>

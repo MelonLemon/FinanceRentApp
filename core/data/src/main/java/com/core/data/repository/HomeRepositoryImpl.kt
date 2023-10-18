@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
+import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
@@ -141,7 +142,7 @@ class HomeRepositoryImpl @Inject constructor(
         year: Int,
         month: Int
     ): List<SectionInfo> {
-        val currentDate = LocalDate.now().toEpochDay()
+        val currentDate =  LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         return dao.addTransaction(
             year = year,
             month = month,
@@ -275,7 +276,7 @@ class HomeRepositoryImpl @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun updatePaidStatusGuest(flatId: Int, guestId: Int, status: Boolean, currency_name: String) {
-        val currentDate = LocalDate.now().toEpochDay()
+        val currentDate =  LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         dao.updatePaidStatusGuest(rent_id = guestId, status=status, currency_name=currency_name, currentDate=currentDate)
     }
 
@@ -305,7 +306,7 @@ class HomeRepositoryImpl @Inject constructor(
         }
         val startDate = fullGuestInfo.start_date!!.toLocalDate()
         val endDate = fullGuestInfo.end_date!!.toLocalDate()
-        val currentDate = LocalDate.now().toEpochDay()
+        val currentDate = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val nights = ChronoUnit.DAYS.between(startDate, endDate).toInt()
         val startMonth = YearMonth.from(startDate)
         val endMonth = YearMonth.from(endDate)
@@ -366,7 +367,7 @@ class HomeRepositoryImpl @Inject constructor(
         val startMonth = YearMonth.from(startDate)
         val endMonth = YearMonth.from(endDate)
         val nights = ChronoUnit.DAYS.between(startDate, endDate).toInt()
-        val currentDate = LocalDate.now().toEpochDay()
+        val currentDate = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val newRent = Rents(
             rentId = fullGuestInfo.id,
             blockId =  flatId,
@@ -409,7 +410,7 @@ class HomeRepositoryImpl @Inject constructor(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun addFlatExpenses(flatId: Int, expensesCategoryId: Int, amount: Int, currency_name: String, month: YearMonth) {
-        val currentDate = LocalDate.now().toEpochDay()
+        val currentDate =  LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         dao.addNewTransaction(
             Transactions(
                 transactionId = null,

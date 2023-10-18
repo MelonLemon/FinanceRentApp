@@ -13,6 +13,7 @@ import com.feature_transactions.domain.model.TransactionMonth
 import com.feature_transactions.domain.repository.TransactionRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapLatest
 import java.util.Currency
 
@@ -27,47 +28,19 @@ class TransactionRepositoryImpl  @Inject constructor(
         year: Int, months: List<Int>?,
         categoriesIds: List<Int>?,
         currency: Currency
-    ): List<TransactionMonth> {
+    ): Flow<Map<Long, List<TransactionListItem>>> {
         Log.d("Transactions", "Begin Repository GetFilteredTransactions")
 
-        var transactions = emptyMap<Long, List<TransactionListItem>>()
 
-        when {
-            months==null && categoriesIds==null -> {
-                transactions = dao.getTransactionsWithoutFilters(year=year)
-            }
-            months!=null && categoriesIds!=null -> {
-                transactions = dao.getTransactionsFiltered(year=year, months=months, categoriesIds=categoriesIds)
-            }
-            months!=null && categoriesIds==null -> {
-                transactions = dao.getTransactionsFilterMonths(year=year, months=months)
-            }
-            months==null && categoriesIds!=null -> {
-                transactions = dao.getTransactionsFilterCategories(year=year, categoriesIds=categoriesIds)
-            }
+        return when {
+            months==null && categoriesIds==null -> return dao.getTransactionsWithoutFilters(year=year)
+            months!=null && categoriesIds!=null -> dao.getTransactionsFiltered(year=year, months=months, categoriesIds=categoriesIds)
+            months!=null && categoriesIds==null -> return dao.getTransactionsFilterMonths(year=year, months=months)
+            months==null && categoriesIds!=null -> dao.getTransactionsFilterCategories(year=year, categoriesIds=categoriesIds)
+            else -> flowOf()
         }
-        Log.d("Transactions", "Before return Repository: $transactions")
-        return if(transactions.isEmpty()){
-            emptyList()
-            } else {
-                val monthsList = months ?: 1..12
-                val daysMap = transactions.mapNotNull{ (key,value) ->
-                    AllTransactionsDay(
-                        date = key.toLocalDate()!!,
-                        transactions = value
-                    )
-                }.groupBy { it.date.monthValue }
-                val listTransactionMonth = monthsList.map {month ->
-                    TransactionMonth(
-                        year = year,
-                        month = month,
-                        amount = daysMap[month]?.sumOf { it.getSumOfTransactions() } ?: 0,
-                        currency = currency,
-                        daysList = daysMap[month] ?: emptyList()
-                    )
-                }
-                listTransactionMonth
-            }
+
+
 
     }
 

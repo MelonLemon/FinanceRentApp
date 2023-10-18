@@ -37,7 +37,7 @@ fun ToListOfTracks(
                 nightsCheck +=nightsPeriod
             }
             stopMonth != startMonth && stopMonth!=endMonth -> {
-                nightsPeriod = ChronoUnit.DAYS.between(stopMonth.atDay(1), stopMonth.atEndOfMonth()).toInt()
+                nightsPeriod = ChronoUnit.DAYS.between(stopMonth.atDay(1), stopMonth.atEndOfMonth()).toInt() + 1
                 amount = nightsPeriod*forOneNight
                 lastAmount -=amount
                 nightsCheck +=nightsPeriod

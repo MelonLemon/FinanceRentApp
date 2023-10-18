@@ -13,6 +13,7 @@ import com.feature_transactions.presentation.util.TransactionScreenEvents
 import com.feature_transactions.presentation.util.TransactionState
 import com.feature_transactions.presentation.util.TransactionsUiEvents
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -59,7 +61,24 @@ class TransactionViewModel @Inject constructor(
     private val isDownloading = _isDownloading.asStateFlow()
 
 
-    private val _filteredTransactionsByMonth = MutableStateFlow(emptyList<TransactionMonth>())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _filteredTransactionsByMonth = filterState.flatMapLatest{ filterState->
+        useCases.getFilteredTransactions(
+            year = filterState.periodFilterState.selectedYear,
+            months = if(filterState.periodFilterState.isAllMonthsSelected) null else filterState.periodFilterState.months,
+            currency = currency.value,
+            categoriesIds = useCases.getFilteredCategoriesId(
+                categoriesFilterList = filterState.categoriesFilterList,
+                blockIds = if(filterState.sectionsFilterState.isAllSelected) null else filterState.sectionsFilterState.listOfSelectedBlIds,
+                selectedIncomeCatId = if(filterState.categoryFilterState.isAllIncomeSelected) null else filterState.categoryFilterState.selectedIncomeCatId,
+                selectedExpensesCatId = if(filterState.categoryFilterState.isAllExpensesSelected) null else filterState.categoryFilterState.selectedExpensesCatId
+            )
+        )
+    }.stateIn(
+    viewModelScope,
+    SharingStarted.WhileSubscribed(5000),
+    emptyList()
+    )
 
     @OptIn(FlowPreview::class)
     private val transactionsByMonth  = searchText
@@ -125,17 +144,6 @@ class TransactionViewModel @Inject constructor(
                     listOfBlocks = listOfBlocks,
                 )
             )
-            val (result, transactions) = useCases.getFilteredTransactions(
-                year = filterState.value.periodFilterState.selectedYear,
-                months = null,
-                currency = currency.value,
-                categoriesIds = null
-            )
-            if(result && transactions!=null){
-                _filteredTransactionsByMonth.value = transactions
-            } else {
-                Log.d("Transactions", "Transactions in Init Fail")
-            }
 
             _isDownloading.value = false
         }
@@ -152,28 +160,12 @@ class TransactionViewModel @Inject constructor(
             }
             is TransactionScreenEvents.OnApplyFilterChanges -> {
                 viewModelScope.launch {
-                    val (result, transactions) = useCases.getFilteredTransactions(
-                        year = event.periodFilterState.selectedYear,
-                        months = if(event.periodFilterState.isAllMonthsSelected) null else event.periodFilterState.months,
-                        currency = currency.value,
-                        categoriesIds = useCases.getFilteredCategoriesId(
-                            categoriesFilterList = filterState.value.categoriesFilterList,
-                            blockIds = if(event.sectionsFilterState.isAllSelected) null else event.sectionsFilterState.listOfSelectedBlIds,
-                            selectedIncomeCatId = if(event.categoryFilterState.isAllIncomeSelected) null else event.categoryFilterState.selectedIncomeCatId,
-                            selectedExpensesCatId = if(event.categoryFilterState.isAllExpensesSelected) null else event.categoryFilterState.selectedExpensesCatId
-                        )
+                    _filterState.value = filterState.value.copy(
+                        periodFilterState = event.periodFilterState,
+                        categoryFilterState = event.categoryFilterState,
+                        sectionsFilterState = event.sectionsFilterState
                     )
-                    if(result && transactions!=null){
-                        _filteredTransactionsByMonth.value = transactions
-                        _filterState.value = filterState.value.copy(
-                            periodFilterState = event.periodFilterState,
-                            categoryFilterState = event.categoryFilterState,
-                            sectionsFilterState = event.sectionsFilterState
-                        )
-                        _onTransactionsUiEvents.emit(TransactionsUiEvents.CloseFilterBottomSheet)
-                    } else {
-                        _onTransactionsUiEvents.emit(TransactionsUiEvents.ErrorMsgUnknown)
-                    }
+                    _onTransactionsUiEvents.emit(TransactionsUiEvents.CloseFilterBottomSheet)
 
                 }
 
