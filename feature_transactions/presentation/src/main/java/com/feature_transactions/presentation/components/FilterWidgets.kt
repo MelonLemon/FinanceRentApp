@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.core.common.components.CloseNavigationRow
 import com.core.common.components.IconCard
@@ -84,7 +85,7 @@ fun FilterAmountCard(
         if (filterState.categoryFilterState.isAllSelected) stringResource(R.string.all_selected) else "",
         if (!filterState.categoryFilterState.isAllSelected && filterState.categoryFilterState.isAllIncomeSelected) stringResource(R.string.all_income) else "",
         if (!filterState.categoryFilterState.isAllSelected && filterState.categoryFilterState.isAllExpensesSelected) stringResource(R.string.all_expenses) else "",
-    )
+    ).filter { it.isNotBlank() }
 
     Card(
         modifier = modifier
@@ -99,32 +100,53 @@ fun FilterAmountCard(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.End
         ){
-            MoneyText(amount = amount, currency = currency)
-            Text(text=stringResource(R.string.period))
+            MoneyText(
+                modifier=Modifier.fillMaxWidth(),
+                textAlign= TextAlign.Start,
+                amount = amount,
+                style=MaterialTheme.typography.displaySmall,
+                color=MaterialTheme.colorScheme.primary,
+                currency = currency)
+            Text(
+                text=stringResource(R.string.period).uppercase(),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             FlowRow(
+                modifier=Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.End),
             ) {
                 listOfPeriodFilters.forEach { info ->
-                    MarkedInfoDisplay(text=info)
+                    MarkedInfoDisplay(
+                        text=info,
+                        drawColor = MaterialTheme.colorScheme.primaryContainer,
+                        textColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 }
             }
-            Text(text=stringResource(R.string.sections))
+            Text(text=stringResource(R.string.sections).uppercase(),
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             FlowRow(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 listOfSecFilters.forEach { info ->
-                    MarkedInfoDisplay(text=info)
+                    MarkedInfoDisplay(text=info,
+                        drawColor = MaterialTheme.colorScheme.primaryContainer,
+                        textColor = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
-            Text(text=stringResource(R.string.categories))
+            Text(text=stringResource(R.string.categories).uppercase(),
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             FlowRow(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 listOfCatFilters.forEach { info ->
-                    MarkedInfoDisplay(text=info)
+
+                    MarkedInfoDisplay(text=info,
+                        drawColor = MaterialTheme.colorScheme.primaryContainer,
+                        textColor = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
             if(!filterState.categoryFilterState.isAllSelected &&  !filterState.categoryFilterState.isAllIncomeSelected){
@@ -135,7 +157,9 @@ fun FilterAmountCard(
                 ) {
                     val incomeCatList = incomeCategories.filter { it.id in filterState.categoryFilterState.selectedIncomeCatId }.map { it.category }
                     incomeCatList.forEach { stringId ->
-                        MarkedInfoDisplay(text=stringResource(stringId))
+                        MarkedInfoDisplay(text=stringResource(stringId),
+                            drawColor = MaterialTheme.colorScheme.primaryContainer,
+                            textColor = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
             }
@@ -147,7 +171,9 @@ fun FilterAmountCard(
                 ) {
                     val expensesCatList = expensesCategories.filter { it.id in filterState.categoryFilterState.selectedExpensesCatId }.map { it.category }
                     expensesCatList.forEach { stringId ->
-                        MarkedInfoDisplay(text=stringResource(stringId))
+                        MarkedInfoDisplay(text=stringResource(stringId),
+                            drawColor = MaterialTheme.colorScheme.primaryContainer,
+                            textColor = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
             }

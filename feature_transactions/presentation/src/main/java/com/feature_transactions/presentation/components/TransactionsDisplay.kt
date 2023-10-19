@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.core.common.components.CircleIcon
@@ -78,7 +79,9 @@ fun TransactionRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         CircleIcon(
-            icon = icon
+            icon = icon,
+            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+            iconTint = MaterialTheme.colorScheme.onTertiaryContainer
         )
         Column(
             modifier = Modifier.weight(1f),
@@ -105,7 +108,9 @@ fun TransactionRow(
             amount = amount,
             currency = currency,
             color = if (amount > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
         )
     }
 

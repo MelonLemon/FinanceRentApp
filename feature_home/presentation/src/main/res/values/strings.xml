@@ -5,7 +5,7 @@
     <string name="cancel">Cancel</string>
     <string name="income">Income</string>
     <string name="expenses">Expenses</string>
-    <string name="paid">Paid:</string>
+    <string name="paid">Paid</string>
     <string name="unpaid">Unpaid:</string>
     <string name="rent_percent">Rent Percent:</string>
     <string name="profit">Profit</string>
@@ -43,4 +43,5 @@
     <string name="end_date">End Date</string>
     <string name="paid_rent">Paid Rent</string>
     <string name="transactions">Transactions</string>
+    <string name="not_paid">Not Paid</string>
 </resources>

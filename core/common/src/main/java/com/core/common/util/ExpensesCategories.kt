@@ -17,9 +17,9 @@ enum class ExpensesCategories(val id: Int, @StringRes val category: Int, @Drawab
     CLEANING_SERVICES(9, R.string.cleaning_services, R.drawable.baseline_cleaning_services_24 ),
     OTHERS(10, R.string.others, R.drawable.baseline_category_24 );
     companion object {
-        private val mapExpIconCategories = IncomeCategories.values().associateBy ({ it.id }, { it.icon })
+
         fun getExpIcon(id: Int): Int? {
-            return mapExpIconCategories[id]
+            return values().first { it.id == id }.icon
         }
 
     }

@@ -44,6 +44,7 @@ import com.core.common.components.MoneyText
 import com.core.common.components.MonthYearDisplay
 import com.core.common.util.ExpensesCategories
 import com.core.common.util.IncomeCategories
+import com.core.common.util.toLocalDate
 import com.feature_home.domain.model.FinCategory
 import com.feature_home.presentation.R
 import com.feature_home.presentation.components.FinResultFlatCard
@@ -75,6 +76,7 @@ fun FlatScreen(
         name= stringResource(R.string.paid_rent)
     )
 
+    val expensesCategoriesList = ExpensesCategories.values()
     //BottomSheet
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -143,11 +145,10 @@ fun FlatScreen(
                 )
             LazyColumn(
                 modifier = Modifier
-                    .padding(innerPadding)
                     .background(
                         Color.Transparent
                     )
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item{
@@ -171,17 +172,19 @@ fun FlatScreen(
                             ){finResultFlat ->
                                 FinResultFlatCard(
                                     title = Month.of(finResultFlat.month).name,
-                                    paid_amount = finResultFlat.paid_amount ?:0,
-                                    unpaid_amount = finResultFlat.unpaid_amount ?:0,
-                                    expenses_amount = finResultFlat.expenses_amount ?:0,
+                                    paidAmount = finResultFlat.paid_amount ?:0,
+                                    unpaidAmount = finResultFlat.unpaid_amount ?:0,
+                                    expensesAmount = finResultFlat.expenses_amount ?:0,
                                     currency = flatState.currencyState.selectedCurrency,
-                                    rent_percent = finResultFlat.rent_percent ?:0f
+                                    rentPercent = finResultFlat.rent_percent ?:0f
                                 )
                             }
                         }
                     }
                 }
+
                 item {
+                    Spacer(modifier = Modifier.height(16.dp))
                     IncomeExpensesToggle(
                         isIncomeSelected = flatState.isIncomeSelected,
                         onBtnClick = {isIncomeSelected ->
@@ -215,10 +218,10 @@ fun FlatScreen(
                         Log.d("Guests", "start_date: ${guest.start_date}, end_date:${guest.end_date}")
                         GuestCard(
                             listInfo = listOf(guest.comment),
-                            guest_name = guest.name,
+                            guestName = guest.name,
                             amount = guest.for_all_nights,
                             currency = flatState.currencyState.selectedCurrency,
-                            is_paid = guest.is_paid,
+                            isPaid = guest.is_paid,
                             onPaidSwitchChange = { is_paid->
                                 flatEvents(FlatScreenEvents.OnPaidSwitchChange(
                                     id = guest.id!!,
@@ -228,8 +231,8 @@ fun FlatScreen(
                             onCardClick = {
                                 flatEvents(FlatScreenEvents.OpenGuestDialog(guest))
                             },
-                            startDate = guest.start_date!!,
-                            endDate = guest.end_date!!
+                            startDate = guest.start_date!!.toLocalDate()!!,
+                            endDate = guest.end_date!!.toLocalDate()!!
                         )
                     }
 
@@ -247,7 +250,7 @@ fun FlatScreen(
                                     "${section.id} + ${section.name}"
                                 }
                             ){expenses_category ->
-                                Log.d("Expenses", "expenses_category:$expenses_category ")
+                                Log.d("Categories", "expenses_category:$expenses_category ")
 
                                 val iconExp = ExpensesCategories.getExpIcon(expenses_category.standard_category_id)
                                 IconCard(
@@ -284,7 +287,11 @@ fun FlatScreen(
                     }
                 }
                 item{
-                    Text(text= stringResource(R.string.transactions))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text= stringResource(R.string.transactions).uppercase(),
+                        style=MaterialTheme.typography.titleMedium
+                    )
                 }
                 items(
                     items = flatState.transactionsDisplay,

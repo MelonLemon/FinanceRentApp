@@ -5,8 +5,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -152,9 +154,9 @@ fun HomeScreen(
                                 FinResultFlatCard(
                                     icon = Icons.Default.Home,
                                     title = stringResource(R.string.flats),
-                                    paid_amount = homeState.finState.finResultFlat.paid_amount ?:0,
-                                    unpaid_amount = homeState.finState.finResultFlat.unpaid_amount ?:0,
-                                    expenses_amount = homeState.finState.finResultFlat.expenses_amount ?:0,
+                                    paidAmount = homeState.finState.finResultFlat.paid_amount ?:0,
+                                    unpaidAmount = homeState.finState.finResultFlat.unpaid_amount ?:0,
+                                    expensesAmount = homeState.finState.finResultFlat.expenses_amount ?:0,
                                     currency = homeState.currencyState.selectedCurrency
                                 )
                             }
@@ -176,7 +178,10 @@ fun HomeScreen(
                 }
                 item{
                     LazyRow(
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface).clip(MaterialTheme.shapes.medium).padding(16.dp),
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surface)
+                            .clip(MaterialTheme.shapes.medium)
+                            .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -215,9 +220,10 @@ fun HomeScreen(
                 }
 
                 item {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalAlignment = Alignment.Start
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ){
 
                         Text(
@@ -229,7 +235,7 @@ fun HomeScreen(
                             amount = homeState.listOfFlat.sumOf { it.current_month_amount },
                             currency = homeState.currencyState.selectedCurrency,
                             color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
                 }
@@ -239,6 +245,7 @@ fun HomeScreen(
                         "${flat.id} + ${flat.name}"
                     }
                 ) {flat ->
+
                     FlatCard(
                         title = flat.name,
                         amount = flat.current_month_amount,
@@ -249,6 +256,11 @@ fun HomeScreen(
                             toFlatScreen(flat.id)
                         }
                     )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+
                 }
 
                 homeState.listOfSections.forEachIndexed { index, sectionInfo ->

@@ -15,9 +15,9 @@ enum class IncomeCategories(val id: Int, @StringRes val category: Int, @Drawable
     OTHERS_INCOME(7,R.string.others,R.drawable.baseline_category_24 );
 
     companion object {
-        private val mapIconCategories = values().associateBy ({ it.id }, { it.icon })
+
         fun getIncIcon(id: Int): Int? {
-            return mapIconCategories[id]
+            return  values().first { it.id == id }.icon
         }
 
     }

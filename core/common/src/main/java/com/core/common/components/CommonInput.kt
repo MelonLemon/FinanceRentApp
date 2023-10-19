@@ -2,6 +2,7 @@ package com.core.common.components
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -78,8 +79,8 @@ fun NumberInput(
         ) },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = "Search",
+                imageVector = Icons.Filled.Create,
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant) },
         trailingIcon = {
             if(text!=""){
@@ -119,8 +120,8 @@ fun NameInput(
         ) },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = "Search",
+                imageVector = Icons.Filled.Create,
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant) },
         trailingIcon = {
             if(text!=""){

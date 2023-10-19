@@ -419,11 +419,11 @@ interface RentCountDao {
     @Query("WITH flatPaid AS (SELECT year, month, sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS paid_amount, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses_amount " +
             "FROM transactions WHERE block_id=:flat_id AND year=:year GROUP BY year, month), " +
             "rentIds AS (SELECT rent_id FROM rents WHERE block_id=:flat_id), " +
-            "flatRent AS (SELECT year, month, sum(amount) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE rent_id IN rentIds AND year=:year GROUP BY year, month) " +
+            "flatRent AS (SELECT year, month, sum(amount) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE rent_id IN rentIds AND year=:year AND is_paid=:isPaid GROUP BY year, month) " +
             "SELECT flatPaid.year AS year, flatPaid.month AS month, flatPaid.paid_amount AS paid_amount, flatRent.unpaid_amount AS unpaid_amount, flatPaid.expenses_amount AS expenses_amount, " +
             "CAST(flatRent.nights AS FLOAT)/(STRFTIME('%d', DATE(flatPaid.year ||'-01-01','+'||(flatPaid.month-1)||' month', 'start of month','+1 month', '-1 day'))) AS rent_percent " +
             "FROM flatPaid JOIN flatRent ON flatPaid.month=flatRent.month")
-    fun getFinResultFlatMonthly(flat_id: Int, year: Int): Flow<List<FinResultsFlat>>
+    fun getFinResultFlatMonthly(flat_id: Int, year: Int, isPaid:Boolean=false): Flow<List<FinResultsFlat>>
 
     @Query("WITH flatPaid AS (SELECT year, month, sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS paid_amount, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses_amount " +
             "FROM transactions WHERE month=:month AND year=:year GROUP BY year, month), " +

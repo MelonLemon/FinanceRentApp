@@ -1,6 +1,7 @@
 package com.feature_home.presentation.components
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -51,7 +52,7 @@ fun LazyListScope.sectionBlock(
         ){
            Text(
                text=sectionInfo.name,
-               style = MaterialTheme.typography.headlineMedium
+               style = MaterialTheme.typography.displaySmall
            )
             IconButton(
                 onClick = onEditBtnClick,
@@ -85,15 +86,15 @@ fun LazyListScope.sectionBlock(
                         "${section.id} + ${section.name}"
                     }
 
-                ){ income_category ->
-                    val icon = IncomeCategories.getIncIcon(income_category.standard_category_id)
+                ){ incomeCategory ->
+                    val icon = IncomeCategories.getIncIcon(incomeCategory.standard_category_id)
                     IconCard(
                         icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
-                        supportingText = income_category.name,
+                        supportingText = incomeCategory.name,
                         onCardClick = {
-                            onCategoryClick(income_category.id)
+                            onCategoryClick(incomeCategory.id)
                         },
-                        isSelected = sectionInfo.selectedCategoryId==income_category.id
+                        isSelected = sectionInfo.selectedCategoryId==incomeCategory.id
                     )
                 }
             } else {
@@ -102,15 +103,17 @@ fun LazyListScope.sectionBlock(
                     key = { section ->
                         "${section.id} + ${section.name}"
                     }
-                ){expenses_category ->
-                    val icon = ExpensesCategories.getExpIcon(expenses_category.standard_category_id)
+                ){expensesCategory ->
+
+                    val icon = ExpensesCategories.getExpIcon(expensesCategory.standard_category_id)
+
                     IconCard(
                         icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
-                        supportingText = expenses_category.name,
+                        supportingText = expensesCategory.name,
                         onCardClick = {
-                            onCategoryClick(expenses_category.id)
+                            onCategoryClick(expensesCategory.id)
                         },
-                        isSelected = sectionInfo.selectedCategoryId==expenses_category.id
+                        isSelected = sectionInfo.selectedCategoryId==expensesCategory.id
                     )
                 }
             }
@@ -144,7 +147,6 @@ fun LazyListScope.sectionBlock(
         else sectionInfo.expensesCategories.first { it.id==transaction.categoryId}
         val icon = if(transaction.isIncome) IncomeCategories.getIncIcon(category.standard_category_id) else
             ExpensesCategories.getExpIcon(category.standard_category_id)
-
         TransactionCard(
             title = category.name,
             icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,

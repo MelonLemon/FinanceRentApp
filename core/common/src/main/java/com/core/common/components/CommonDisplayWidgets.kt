@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
@@ -233,17 +235,50 @@ fun MarkedInfoDisplay(
 
 @Composable
 fun MoneyText(
+    modifier: Modifier=Modifier,
     amount: Int,
     currency: Currency,
     color:Color = MaterialTheme.colorScheme.onSurface,
-    style: TextStyle = MaterialTheme.typography.titleSmall
+    style: TextStyle = MaterialTheme.typography.titleSmall,
+    textAlign: TextAlign?=null,
 ) {
     Text(
+        modifier=modifier,
         text="${currency.symbol} ${String.format(Locale.FRANCE, "%,d", (amount))}",
         color = color,
-        style = style
+        style = style,
+        textAlign = textAlign
     )
 }
+
+
+@Composable
+fun MarkedMoneyText(
+    modifier: Modifier=Modifier,
+    amount: Int,
+    currency: Currency,
+    style: TextStyle = MaterialTheme.typography.titleSmall,
+    drawColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    textColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Text(
+        modifier = modifier
+            .drawBehind {
+                drawRoundRect(
+                    color = drawColor,
+                    size = this.size,
+                    cornerRadius = CornerRadius(25f, 25f)
+                )
+            }
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        text="${currency.symbol} ${String.format(Locale.FRANCE, "%,d", (amount))}",
+        maxLines = 1,
+        overflow = TextOverflow.Clip,
+        color = textColor,
+        style = style,
+    )
+}
+
 @Composable
 fun IconCard(
     modifier: Modifier=Modifier,
@@ -262,12 +297,13 @@ fun IconCard(
             },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.outlinedCardColors(
-            containerColor = containerColor,
+            containerColor = if(isSelected) MaterialTheme.colorScheme.surfaceVariant.copy(0.7f) else containerColor,
             contentColor = contentColor
         )
     ){
         Box(
             modifier = modifier.padding(16.dp),
+            contentAlignment = Alignment.Center
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -347,8 +383,21 @@ fun AddValueWidget(
                 text=""
             }
         )
-        IconButton(onClick = { if(text.isNotBlank()) onAddBtnClick(text)}) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+
+        IconButton(
+            onClick = { if(text.isNotBlank()) {
+                onAddBtnClick(text)
+                text=""
+            }},
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer
+            )
         }
     }
 }
@@ -372,8 +421,15 @@ fun AddNameWidget(
             onTextChanged=onTextChanged,
             onCancelClicked=onCancelClicked
         )
-        IconButton(onClick = { if(text.isNotBlank()) onAddBtnClick()}) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = null)
+        IconButton(
+            onClick = { if(text.isNotBlank()) onAddBtnClick()},
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Icon(imageVector = Icons.Default.Add,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer)
         }
     }
 }

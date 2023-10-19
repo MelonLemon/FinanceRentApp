@@ -18,7 +18,7 @@ class GetFlatsAdditionalInfo @Inject constructor(
         ).mapLatest { info ->
             info.mapValues { (_, item) ->
                 val listString = item.map {addInfo ->
-                    "${addInfo.rent_name} - ${addInfo.nights} - ${if(addInfo.is_paid) "O" else "X"}"
+                    "${addInfo.rent_name} - ${addInfo.nights} nights"
                 }
                 listString
             }
