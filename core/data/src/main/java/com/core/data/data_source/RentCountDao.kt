@@ -425,7 +425,7 @@ interface RentCountDao {
     }
 
     @Query("WITH flatPaid AS (SELECT year, month, sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS paid_amount, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses_amount " +
-            "FROM transactions WHERE block_id=:flat_id AND year=:year GROUP BY year, month ORDER BY month), " +
+            "FROM transactions WHERE block_id=:flat_id AND year=:year GROUP BY year, month), " +
             "rentIds AS (SELECT rent_id FROM rents WHERE block_id=:flat_id), " +
             "flatRent AS (SELECT year, month, sum(CASE WHEN is_paid=:isPaid THEN amount ELSE 0 END) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE rent_id IN rentIds AND year=:year GROUP BY year, month) " +
             "SELECT flatPaid.year AS year, flatPaid.month AS month, flatPaid.paid_amount AS paid_amount, flatRent.unpaid_amount AS unpaid_amount, flatPaid.expenses_amount AS expenses_amount, " +
