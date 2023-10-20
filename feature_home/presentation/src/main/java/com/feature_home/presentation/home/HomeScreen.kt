@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import com.core.common.components.IconCard
 import com.core.common.components.MoneyText
 import com.feature_home.domain.model.TransactionInfo
@@ -239,6 +240,18 @@ fun HomeScreen(
                         )
                     }
                 }
+                if(homeState.listOfFlat.isEmpty()){
+                    item {
+                        Text(
+                            text= stringResource(R.string.you_have_no_flats_add_flat),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(30.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
                 items(
                     items = homeState.listOfFlat,
                     key = { flat ->
@@ -262,7 +275,17 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                 }
-
+                if(homeState.listOfFlat.isEmpty()){
+                    item {
+                        Text(
+                            text= stringResource(R.string.you_have_no_income_expenses_blocks_and_one),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(30.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
                 homeState.listOfSections.forEachIndexed { index, sectionInfo ->
                     sectionBlock(
                         sectionInfo=sectionInfo,

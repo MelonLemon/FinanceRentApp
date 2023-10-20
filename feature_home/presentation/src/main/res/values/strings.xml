@@ -44,4 +44,6 @@
     <string name="paid_rent">Paid Rent</string>
     <string name="transactions">Transactions</string>
     <string name="not_paid">Not Paid</string>
+    <string name="you_have_no_flats_add_flat">You have no flats! Add Flat!</string>
+    <string name="you_have_no_income_expenses_blocks_and_one">You have no income/expenses blocks! And one!</string>
 </resources>

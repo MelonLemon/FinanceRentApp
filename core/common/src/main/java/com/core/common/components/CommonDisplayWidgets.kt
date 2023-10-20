@@ -138,7 +138,7 @@ fun BackToNavigationRow(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                MaterialTheme.colorScheme.primaryContainer
+                MaterialTheme.colorScheme.primary
             ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
@@ -152,14 +152,14 @@ fun BackToNavigationRow(
             Icon(
                 imageVector = Icons.Default.KeyboardArrowLeft,
                 contentDescription = null,
-                tint= MaterialTheme.colorScheme.onPrimaryContainer
+                tint= MaterialTheme.colorScheme.onPrimary
             )
         }
 
         Text(
             modifier = Modifier.fillMaxWidth(),
             text = text,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = MaterialTheme.colorScheme.onPrimary,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium
         )

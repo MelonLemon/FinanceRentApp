@@ -7,6 +7,7 @@ import androidx.room.MapInfo
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.core.common.util.SimpleItem
 import com.core.data.data_source.util.FLAT_CATEGORY
 import com.core.data.data_source.util.SECTION_CATEGORY
@@ -68,7 +69,7 @@ interface RentCountDao {
     }
 
     //BLOCKS
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun addNewBlock(block: Blocks): Long
 
     @Query("UPDATE blocks SET name =:name WHERE block_id=:block_id")
@@ -87,7 +88,7 @@ interface RentCountDao {
     suspend fun getBlocks():List<SimpleItem>
 
     //TRANSACTIONS
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun addNewTransaction(transaction: Transactions):Long
 
     @Query("DELETE FROM transactions WHERE transaction_id=:transaction_id")
@@ -114,7 +115,7 @@ interface RentCountDao {
 
 
     //Categories
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun addNewCategory(category: Categories)
 
     @Query("SELECT category_id as id, standard_category_id, name FROM categories WHERE block_id=:block_id")
@@ -128,10 +129,10 @@ interface RentCountDao {
 
 
     //RENT
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun addNewRent(rents: Rents): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun addRentTrack(rentsTrack: RentsTrack)
 
     @Query("DELETE FROM rents_track WHERE rent_id=:rent_id")
@@ -139,9 +140,6 @@ interface RentCountDao {
 
     @Query("SELECT transaction_id FROM rents_track WHERE rent_id=:rent_id")
     suspend fun getTransactionsId(rent_id: Int): List<Int>
-
-    @Query("SELECT * FROM rents_track WHERE rent_id=:rent_id")
-    suspend fun getRentsTrackByRentId(rent_id: Int): List<RentsTrack>
 
     @Transaction
     suspend fun addNewRentInfo(rents: Rents, currency_name: String, listOfTracks: List<RentsTrack>, currentDate: Long){
@@ -227,11 +225,17 @@ interface RentCountDao {
 
     @Transaction
     suspend fun renewRentInfo(rents: Rents, isAmountChanged:Boolean, isStatusChanged: Boolean, currency_name: String, currentDate: Long){
-        addNewRent(rents=rents)
+        Log.d("Guests", "rents: $rents")
+
         if(isAmountChanged || isStatusChanged){
-            val rentsTrack = getRentsTrackByRentId(rent_id = rents.rentId!!)
+            Log.d("Renew", "isAmountChanged || isStatusChanged: ${isAmountChanged || isStatusChanged}")
+            Log.d("Renew", "rentId: and rent_id ${rents.rentId}")
+            val rentsTrack = getTracks(rent_id=rents.rentId!!)
+            if(rentsTrack.isEmpty()) throw Exception("Rent track can't be empty")
+            Log.d("Renew", "rentsTrack: $rentsTrack")
             var newRentsTrack = rentsTrack
             if(isAmountChanged){
+                Log.d("Renew", "isAmountChanged : ${isAmountChanged}")
                 val allNights = rents.nights
                 var lastDays = allNights
                 var lastAmount = rents.forAllNights
@@ -249,6 +253,7 @@ interface RentCountDao {
                 val categoryId = getCategoryFlat(block_id = rents.blockId)
 
                 if(rents.isPaid){
+                    Log.d("Renew", "Should be add new")
                     newRentsTrack = newRentsTrack.map {rentTrack ->
                         val transactionsId = addNewTransaction(
                             transaction = Transactions(
@@ -264,11 +269,12 @@ interface RentCountDao {
                             )
                         ).toInt()
                         rentTrack.copy(
-                            isPaid = rents.isPaid,
+                            isPaid = true,
                             transaction_id = transactionsId
                         )
                     }
                 } else {
+                    Log.d("Renew", "Should not be add new")
                     newRentsTrack = newRentsTrack.map {rentTrack ->
                         if(rentTrack.transaction_id!=null){
                             deleteTransactionById(transaction_id = rentTrack.transaction_id)
@@ -282,17 +288,19 @@ interface RentCountDao {
             }
 
             newRentsTrack.forEach { rentTrack ->
+                Log.d("Renew", "addRentTrack: $rentTrack")
                 addRentTrack(rentTrack)
             }
         }
+        addNewRent(rents=rents).toInt()
 
     }
 
-    @Query("UPDATE rents_track SET transaction_id =:nullValue WHERE rent_id=:rent_id")
-    suspend fun deleteTransactionsIdInTrack(nullValue: Int?=null, rent_id: Int)
+    @Query("UPDATE rents_track SET is_paid=:status, transaction_id =:nullValue WHERE rent_id=:rent_id")
+    suspend fun deleteTransactionsIdInTrack(status: Boolean=false, nullValue: Int?=null, rent_id: Int)
 
-    @Query("UPDATE rents_track SET transaction_id =:transaction_id WHERE track_id=:track_id")
-    suspend fun updateRentTrackTransactionId(transaction_id: Int, track_id: Int)
+    @Query("UPDATE rents_track SET is_paid=:status, transaction_id =:transaction_id WHERE track_id=:track_id")
+    suspend fun updateRentTrackTransactionId(status: Boolean, transaction_id: Int, track_id: Int)
 
     @Query("UPDATE rents SET is_paid=:status WHERE rent_id=:rent_id")
     suspend fun updateRentStatus(status: Boolean, rent_id: Int)
@@ -417,21 +425,22 @@ interface RentCountDao {
     }
 
     @Query("WITH flatPaid AS (SELECT year, month, sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS paid_amount, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses_amount " +
-            "FROM transactions WHERE block_id=:flat_id AND year=:year GROUP BY year, month), " +
+            "FROM transactions WHERE block_id=:flat_id AND year=:year GROUP BY year, month ORDER BY month), " +
             "rentIds AS (SELECT rent_id FROM rents WHERE block_id=:flat_id), " +
-            "flatRent AS (SELECT year, month, sum(amount) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE rent_id IN rentIds AND year=:year AND is_paid=:isPaid GROUP BY year, month) " +
+            "flatRent AS (SELECT year, month, sum(CASE WHEN is_paid=:isPaid THEN amount ELSE 0 END) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE rent_id IN rentIds AND year=:year GROUP BY year, month) " +
             "SELECT flatPaid.year AS year, flatPaid.month AS month, flatPaid.paid_amount AS paid_amount, flatRent.unpaid_amount AS unpaid_amount, flatPaid.expenses_amount AS expenses_amount, " +
             "CAST(flatRent.nights AS FLOAT)/(STRFTIME('%d', DATE(flatPaid.year ||'-01-01','+'||(flatPaid.month-1)||' month', 'start of month','+1 month', '-1 day'))) AS rent_percent " +
-            "FROM flatPaid JOIN flatRent ON flatPaid.month=flatRent.month")
+            "FROM flatPaid LEFT JOIN flatRent ON flatPaid.month=flatRent.month")
     fun getFinResultFlatMonthly(flat_id: Int, year: Int, isPaid:Boolean=false): Flow<List<FinResultsFlat>>
 
-    @Query("WITH flatPaid AS (SELECT year, month, sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS paid_amount, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses_amount " +
-            "FROM transactions WHERE month=:month AND year=:year GROUP BY year, month), " +
-            "flatRent AS (SELECT year, month, sum(amount) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE month=:month AND year=:year GROUP BY year, month) " +
+    @Query("WITH flatIds AS (SELECT block_id FROM blocks WHERE block_category=:category), " +
+            "flatPaid AS (SELECT year, month, sum(CASE WHEN amount>0 THEN amount ELSE 0 END) AS paid_amount, sum(CASE WHEN amount<0 THEN amount ELSE 0 END) AS expenses_amount " +
+            "FROM transactions WHERE month=:month AND year=:year AND block_id IN flatIds GROUP BY year, month), " +
+            "flatRent AS (SELECT year, month, sum(amount) AS unpaid_amount, sum(nights) AS nights FROM rents_track WHERE month=:month AND year=:year AND is_paid=:isPaid GROUP BY year, month) " +
             "SELECT flatPaid.year AS year, flatPaid.month AS month, flatPaid.paid_amount AS paid_amount, flatRent.unpaid_amount AS unpaid_amount, flatPaid.expenses_amount AS expenses_amount, " +
             ":rentPercent AS rent_percent " +
-            "FROM flatPaid JOIN flatRent ON flatPaid.month=flatRent.month")
-    fun getAllFinResultFlatByMonth(year: Int, month: Int, rentPercent: Float = 0f): Flow<FinResultsFlat?>
+            "FROM flatPaid LEFT JOIN flatRent ON flatPaid.month=flatRent.month")
+    fun getAllFinResultFlatByMonth(year: Int, month: Int, rentPercent: Float = 0f, isPaid:Boolean=false, category: String): Flow<FinResultsFlat?>
 
     @Transaction
     suspend fun updatePaidStatusGuest(rent_id: Int, currency_name: String, status: Boolean, currentDate: Long){
@@ -450,6 +459,7 @@ interface RentCountDao {
                 val listOfTracks = getTracks(rent_id=rent_id)
                 val categoryId = getCategoryFlat(rent.blockId)
                 listOfTracks.forEach {track ->
+
                     val transactionId = addNewTransaction(
                         Transactions(
                             transactionId = null,
@@ -463,7 +473,7 @@ interface RentCountDao {
                             comment = "${rent.name} - ${track.nights}N - ${track.month}/${track.year}"
                         )
                     ).toInt()
-                    updateRentTrackTransactionId(transaction_id = transactionId, track_id = track.trackId!!)
+                    updateRentTrackTransactionId(status=true, transaction_id = transactionId, track_id = track.trackId!!)
                 }
             }
             updateRentStatus(status=status, rent_id = rent_id)

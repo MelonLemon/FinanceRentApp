@@ -276,6 +276,7 @@ fun SettingsBottomSheet(
 ) {
     var tempCurrency by remember{ mutableStateOf(selectedCurrency) }
     var textSearch by remember{ mutableStateOf("") }
+    var filteredListCurrency by remember{ mutableStateOf(listCurrency) }
     Column(
         modifier=modifier.padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -287,9 +288,11 @@ fun SettingsBottomSheet(
             text = textSearch,
             onTextChanged = { text->
                 textSearch=text
+                filteredListCurrency = listCurrency.filter { it.getDisplayName(Locale.ENGLISH).contains(text, ignoreCase = true)}
             },
             onCancelClicked = {
-                onCancel()
+                textSearch=""
+                filteredListCurrency=listCurrency
             }
         )
         LazyColumn(
@@ -300,7 +303,7 @@ fun SettingsBottomSheet(
             horizontalAlignment = Alignment.Start
         ){
             itemsIndexed(
-                items = listCurrency,
+                items = filteredListCurrency,
                 key = { index, currency ->
                     "$index" + currency.displayName }
             ){ index, currency ->
@@ -330,7 +333,7 @@ fun SettingsBottomSheet(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Button(onClick = {
-                if(tempCurrency==selectedCurrency){ onAgree(tempCurrency) } else { onCancel()}
+                if(tempCurrency!=selectedCurrency){ onAgree(tempCurrency) } else { onCancel()}
             }) {
                 Text(text= stringResource(R.string.change))
             }

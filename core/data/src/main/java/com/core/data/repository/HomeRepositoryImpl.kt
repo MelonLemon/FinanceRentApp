@@ -240,7 +240,7 @@ class HomeRepositoryImpl @Inject constructor(
         month: Int,
         rentPercent: Float
     ): Flow<FinResultsFlat?> {
-        return dao.getAllFinResultFlatByMonth(year=year, month=month, rentPercent=0f)
+        return dao.getAllFinResultFlatByMonth(year=year, month=month, rentPercent=0f, category = FLAT_CATEGORY)
     }
 
     override fun getListOfFlats(
@@ -361,12 +361,13 @@ class HomeRepositoryImpl @Inject constructor(
             throw Exception("Dates can't be null for guest")
         }
         val startDate = fullGuestInfo.start_date!!.toLocalDate()
-        val endDate = fullGuestInfo.start_date!!.toLocalDate()
-        val oldStartDate = fullGuestInfo.start_date!!.toLocalDate()
-        val oldEndDate = fullGuestInfo.start_date!!.toLocalDate()
+        val endDate = fullGuestInfo.end_date!!.toLocalDate()
+        val oldStartDate = oldFullGuestInfo.start_date!!.toLocalDate()
+        val oldEndDate = oldFullGuestInfo.end_date!!.toLocalDate()
         val startMonth = YearMonth.from(startDate)
         val endMonth = YearMonth.from(endDate)
         val nights = ChronoUnit.DAYS.between(startDate, endDate).toInt()
+        Log.d("Renew", "Dates, start:$startDate, end:$endDate, nights:$nights")
         val currentDate = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val newRent = Rents(
             rentId = fullGuestInfo.id,
@@ -381,13 +382,18 @@ class HomeRepositoryImpl @Inject constructor(
             nights = nights,
             isPaid = fullGuestInfo.is_paid)
         if(startDate!!.isEqual(oldStartDate) && endDate!!.isEqual(oldEndDate)){
+            Log.d("Renew", "Dates didn't change")
+            Log.d("Renew", "newRent: $newRent")
+            Log.d("Renew", "isAmountChanged: ${fullGuestInfo.for_all_nights != oldFullGuestInfo.for_all_nights}")
+            Log.d("Renew", "isStatusChanged: ${fullGuestInfo.is_paid != oldFullGuestInfo.is_paid}")
             dao.renewRentInfo(rents = newRent,
-                isAmountChanged = fullGuestInfo.for_all_nights == oldFullGuestInfo.for_all_nights,
-                isStatusChanged = fullGuestInfo.is_paid == oldFullGuestInfo.is_paid,
+                isAmountChanged = fullGuestInfo.for_all_nights != oldFullGuestInfo.for_all_nights,
+                isStatusChanged = fullGuestInfo.is_paid != oldFullGuestInfo.is_paid,
                 currency_name=currency_name,
                 currentDate= currentDate
             )
         } else{
+            Log.d("Renew", "Dates  change")
             val listOfTracks = ToListOfTracks(
                 startDate=startDate!!,
                 endDate=endDate!!,

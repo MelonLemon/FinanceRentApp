@@ -42,12 +42,12 @@ fun RentPercentWidget(
     ) {
         MarkedInfoDisplay(
             text= stringResource(R.string.rent_percent) + " ${(rentPercent*100).toInt()}%",
-            drawColor = MaterialTheme.colorScheme.secondaryContainer,
-            textColor = MaterialTheme.colorScheme.onSecondaryContainer
+            drawColor = MaterialTheme.colorScheme.tertiary,
+            textColor = MaterialTheme.colorScheme.onTertiary
             )
         LinearProgressIndicator(
             progress = rentPercent,
-            color = MaterialTheme.colorScheme.secondaryContainer
+            color = MaterialTheme.colorScheme.tertiary
         )
     }
 }

@@ -31,8 +31,8 @@ class DatabaseInitializer(
     }
 
     private suspend fun populateDatabase() {
-        populateWithFlat()
-        populateWithSection()
+//        populateWithFlat()
+//        populateWithSection()
     }
 
     private suspend fun populateWithFlat() {
