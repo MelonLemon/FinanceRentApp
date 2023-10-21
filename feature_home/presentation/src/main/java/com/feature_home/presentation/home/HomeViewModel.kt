@@ -240,7 +240,8 @@ class HomeViewModel  @Inject constructor(
                         transaction = event.transaction,
                         year = independentHomeState.value.yearMonth.year,
                         month = independentHomeState.value.yearMonth.monthValue,
-                        currency_name = independentHomeState.value.currencyState.selectedCurrency.displayName
+                        currency_name = independentHomeState.value.currencyState.selectedCurrency.displayName,
+                        listOfSections=listOfSections.value
                     )
                     if(result && sections!=null){
                         _listOfSections.value = sections

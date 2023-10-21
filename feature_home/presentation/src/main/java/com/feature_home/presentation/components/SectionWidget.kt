@@ -3,6 +3,7 @@ package com.feature_home.presentation.components
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,8 +32,10 @@ import com.feature_home.domain.model.SectionInfo
 import java.time.YearMonth
 import java.util.Currency
 
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 fun LazyListScope.sectionBlock(
+    modifier:Modifier=Modifier,
     sectionInfo: SectionInfo,
     currency: Currency,
     onEditBtnClick: () -> Unit,
@@ -46,7 +49,7 @@ fun LazyListScope.sectionBlock(
 
     item{
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ){
@@ -148,6 +151,7 @@ fun LazyListScope.sectionBlock(
         val icon = if(transaction.isIncome) IncomeCategories.getIncIcon(category.standard_category_id) else
             ExpensesCategories.getExpIcon(category.standard_category_id)
         TransactionCard(
+            modifier=Modifier.animateItemPlacement(),
             title = category.name,
             icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
             amount = transaction.amount,

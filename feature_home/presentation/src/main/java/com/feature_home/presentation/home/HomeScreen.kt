@@ -2,6 +2,8 @@ package com.feature_home.presentation.home
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -59,7 +61,7 @@ import com.feature_home.presentation.home.util.HomeUiEvents
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
@@ -168,6 +170,7 @@ fun HomeScreen(
                                 }
                             ){ finResSection ->
                                 FinResultCatCard(
+                                    modifier=Modifier.animateItemPlacement(),
                                     icon = Icons.Default.List,
                                     currency = homeState.currencyState.selectedCurrency,
                                     amount = finResSection.amount ?:0,
@@ -240,8 +243,9 @@ fun HomeScreen(
                         )
                     }
                 }
-                if(homeState.listOfFlat.isEmpty()){
-                    item {
+                item {
+                    AnimatedVisibility(homeState.listOfFlat.isEmpty()){
+
                         Text(
                             text= stringResource(R.string.you_have_no_flats_add_flat),
                             modifier = Modifier
@@ -249,8 +253,10 @@ fun HomeScreen(
                                 .padding(30.dp),
                             textAlign = TextAlign.Center
                         )
+
                     }
                 }
+
 
                 items(
                     items = homeState.listOfFlat,
@@ -260,6 +266,7 @@ fun HomeScreen(
                 ) {flat ->
 
                     FlatCard(
+                        modifier=Modifier.animateItemPlacement(),
                         title = flat.name,
                         amount = flat.current_month_amount,
                         currency = homeState.currencyState.selectedCurrency,
@@ -275,8 +282,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                 }
-                if(homeState.listOfFlat.isEmpty()){
-                    item {
+                item { AnimatedVisibility(homeState.listOfFlat.isEmpty()){
                         Text(
                             text= stringResource(R.string.you_have_no_income_expenses_blocks_and_one),
                             modifier = Modifier
@@ -284,8 +290,7 @@ fun HomeScreen(
                                 .padding(30.dp),
                             textAlign = TextAlign.Center
                         )
-                    }
-                }
+                }}
                 homeState.listOfSections.forEachIndexed { index, sectionInfo ->
                     sectionBlock(
                         sectionInfo=sectionInfo,
@@ -335,7 +340,7 @@ fun HomeScreen(
 
         //Bottom Sheet
 
-        if (showBottomSheet) {
+        AnimatedVisibility(showBottomSheet) {
             ModalBottomSheet(
                 onDismissRequest = {
                     showBottomSheet = false
@@ -345,7 +350,7 @@ fun HomeScreen(
                 sheetState = sheetState
             ) {
                 // Sheet content
-                if(settingsBottomSheetVisibility){
+                AnimatedVisibility(settingsBottomSheetVisibility){
                     SettingsBottomSheet(
                         onCancel = {
                             showBottomSheet = false
@@ -359,7 +364,7 @@ fun HomeScreen(
                     )
                 }
 
-                if(sectionBottomSheetVisibility){
+                AnimatedVisibility(sectionBottomSheetVisibility){
 
                     SectionBottomSheet(
                         listOfName = homeState.listOfSections.map{it.name},
@@ -378,7 +383,7 @@ fun HomeScreen(
         //Dialogs
 
 
-        if(newFlatDialogVisibility){
+        AnimatedVisibility(newFlatDialogVisibility){
             NewFlatDialog(
                 onCancel = {
                     newFlatDialogVisibility = false
@@ -392,7 +397,7 @@ fun HomeScreen(
 
 
 
-        if(yearMonthDialogVisibility){
+        AnimatedVisibility(yearMonthDialogVisibility){
             YearMonthDialog(
                 selectedYearMonth = homeState.yearMonth,
                 onCancel = {

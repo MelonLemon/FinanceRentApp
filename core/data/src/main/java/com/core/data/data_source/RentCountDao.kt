@@ -1,6 +1,6 @@
 package com.core.data.data_source
 
-import android.util.Log
+
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.MapInfo
@@ -23,6 +23,7 @@ import com.feature_home.domain.model.TransactionInfo
 import com.feature_transactions.domain.model.CategoriesFilter
 import com.feature_transactions.domain.model.TransactionListItem
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import java.time.YearMonth
 
 @Dao
@@ -175,9 +176,9 @@ interface RentCountDao {
     @Transaction
     suspend fun addNewGuest(rents: Rents, currency_name: String, currentDate: Long,  month: Int, year: Int){
         val categoryId =  if(rents.isPaid) getCategoryFlat(block_id = rents.blockId) else 0
-        Log.d("New Guest", "Category Id: $categoryId")
+
         val rentId = addNewRent(rents=rents).toInt()
-        Log.d("New Guest", "RentId: $rentId")
+
         val transactionId = if(rents.isPaid) addNewTransaction(
             Transactions(
                 transactionId = null,
@@ -191,7 +192,7 @@ interface RentCountDao {
                 comment = "${rents.name} - ${rents.nights}N - ${month}/${year}"
             )
         ).toInt() else null
-        Log.d("New Guest", "transactionId: $transactionId")
+
         addRentTrack(
             rentsTrack = RentsTrack(
                 trackId = null,
@@ -203,7 +204,7 @@ interface RentCountDao {
                 isPaid = rents.isPaid,
                 transaction_id = transactionId
             ))
-        Log.d("New Guest", "RentsTrack successfully No way")
+
     }
 
     @Transaction
@@ -225,17 +226,16 @@ interface RentCountDao {
 
     @Transaction
     suspend fun renewRentInfo(rents: Rents, isAmountChanged:Boolean, isStatusChanged: Boolean, currency_name: String, currentDate: Long){
-        Log.d("Guests", "rents: $rents")
+
 
         if(isAmountChanged || isStatusChanged){
-            Log.d("Renew", "isAmountChanged || isStatusChanged: ${isAmountChanged || isStatusChanged}")
-            Log.d("Renew", "rentId: and rent_id ${rents.rentId}")
+
             val rentsTrack = getTracks(rent_id=rents.rentId!!)
             if(rentsTrack.isEmpty()) throw Exception("Rent track can't be empty")
-            Log.d("Renew", "rentsTrack: $rentsTrack")
+
             var newRentsTrack = rentsTrack
             if(isAmountChanged){
-                Log.d("Renew", "isAmountChanged : ${isAmountChanged}")
+
                 val allNights = rents.nights
                 var lastDays = allNights
                 var lastAmount = rents.forAllNights
@@ -253,7 +253,7 @@ interface RentCountDao {
                 val categoryId = getCategoryFlat(block_id = rents.blockId)
 
                 if(rents.isPaid){
-                    Log.d("Renew", "Should be add new")
+
                     newRentsTrack = newRentsTrack.map {rentTrack ->
                         val transactionsId = addNewTransaction(
                             transaction = Transactions(
@@ -274,7 +274,7 @@ interface RentCountDao {
                         )
                     }
                 } else {
-                    Log.d("Renew", "Should not be add new")
+
                     newRentsTrack = newRentsTrack.map {rentTrack ->
                         if(rentTrack.transaction_id!=null){
                             deleteTransactionById(transaction_id = rentTrack.transaction_id)
@@ -288,7 +288,7 @@ interface RentCountDao {
             }
 
             newRentsTrack.forEach { rentTrack ->
-                Log.d("Renew", "addRentTrack: $rentTrack")
+
                 addRentTrack(rentTrack)
             }
         }
@@ -501,7 +501,7 @@ interface RentCountDao {
                     name = block.name,
                     incomeCategories =  incomeCat,
                     expensesCategories = expCat,
-                    transactionsDisplay = transactions,
+                    transactionsDisplay = transactions.reversed(),
                     selectedCategoryId = newSelectedId
                 )
             )
@@ -554,14 +554,21 @@ interface RentCountDao {
     suspend fun addTransaction(
         transaction: Transactions,
         year: Int,
-        month: Int
+        month: Int,
+        listOfSections: List<SectionInfo>
     ): List<SectionInfo>{
         addNewTransaction(transaction=transaction)
-        return getListSections(
-            sectionCategory = SECTION_CATEGORY,
-            year = year,
-            month = month
-        )
+        val newListOfSections = listOfSections.map { section->
+            if(section.id==transaction.blockId){
+                val transactions = getTransactionsByBlockIdMonth(year=year,month=month, block_id = transaction.blockId).first()
+                section.copy(
+                    transactionsDisplay = transactions.reversed()
+                )
+            } else {
+                section
+            }
+        }
+        return newListOfSections
     }
 
 

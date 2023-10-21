@@ -12,10 +12,11 @@ class AddTransaction @Inject constructor(
                                 transaction: TransactionInfo,
                                 year: Int,
                                 month: Int,
-                                currency_name: String
+                                currency_name: String,
+                                listOfSections:List<SectionInfo>
     ): Pair<Boolean, List<SectionInfo>?>{
         return try {
-            val sections = repository.addTransaction(sectionId=sectionId, transaction=transaction, year=year, month=month, currency_name = currency_name)
+            val sections = repository.addTransaction(sectionId=sectionId, transaction=transaction, year=year, month=month, currency_name = currency_name,listOfSections=listOfSections )
             Pair(true, sections)
         } catch (e: Exception){
             Pair(false, null)

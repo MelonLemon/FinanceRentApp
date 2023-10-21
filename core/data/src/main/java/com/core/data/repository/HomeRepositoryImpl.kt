@@ -30,8 +30,10 @@ import com.feature_home.domain.model.SectionInfo
 import com.feature_home.domain.model.TransactionInfo
 
 import com.feature_home.domain.repository.HomeRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapLatest
 import java.time.LocalDate
 import java.time.Year
 import java.time.YearMonth
@@ -54,7 +56,7 @@ class HomeRepositoryImpl @Inject constructor(
         val newTransactions = dao.getSectionTransactionsBYMonth(year=yearMonth.year, month=yearMonth.monthValue, blocksId= blocksId as List<Int>)
         val newListOfSections = listOfSections.map {
             it.copy(
-                transactionsDisplay = newTransactions[it.id] ?: emptyList()
+                transactionsDisplay = newTransactions[it.id]?.reversed() ?: emptyList()
             )
         }
         return newListOfSections
@@ -140,7 +142,8 @@ class HomeRepositoryImpl @Inject constructor(
         currency_name: String,
         transaction: TransactionInfo,
         year: Int,
-        month: Int
+        month: Int,
+        listOfSections:List<SectionInfo>
     ): List<SectionInfo> {
         val currentDate =  LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         return dao.addTransaction(
@@ -156,7 +159,8 @@ class HomeRepositoryImpl @Inject constructor(
                 month=month,
                 currentDate=currentDate,
                 comment="$month/$year"
-            )
+            ),
+            listOfSections = listOfSections
         )
     }
 
@@ -285,9 +289,12 @@ class HomeRepositoryImpl @Inject constructor(
         return dao.getAllRentsMonth(block_id = flatId, year=yearMonth.year, month=yearMonth.monthValue)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getTransactions(yearMonth: YearMonth, flatId: Int): Flow<List<TransactionInfo>> {
-        return dao.getTransactionsByBlockIdMonth(year=yearMonth.year, month=yearMonth.monthValue, block_id = flatId)
+        return dao.getTransactionsByBlockIdMonth(year=yearMonth.year, month=yearMonth.monthValue, block_id = flatId).mapLatest {it->
+            it.reversed()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -331,7 +338,7 @@ class HomeRepositoryImpl @Inject constructor(
                     month=startDate.monthValue,
                     year=startDate.year
                 )
-                Log.d("New Guest", "Add new Guest successfully!")
+
             }
 
         } else {
@@ -367,7 +374,7 @@ class HomeRepositoryImpl @Inject constructor(
         val startMonth = YearMonth.from(startDate)
         val endMonth = YearMonth.from(endDate)
         val nights = ChronoUnit.DAYS.between(startDate, endDate).toInt()
-        Log.d("Renew", "Dates, start:$startDate, end:$endDate, nights:$nights")
+
         val currentDate = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
         val newRent = Rents(
             rentId = fullGuestInfo.id,
@@ -382,10 +389,7 @@ class HomeRepositoryImpl @Inject constructor(
             nights = nights,
             isPaid = fullGuestInfo.is_paid)
         if(startDate!!.isEqual(oldStartDate) && endDate!!.isEqual(oldEndDate)){
-            Log.d("Renew", "Dates didn't change")
-            Log.d("Renew", "newRent: $newRent")
-            Log.d("Renew", "isAmountChanged: ${fullGuestInfo.for_all_nights != oldFullGuestInfo.for_all_nights}")
-            Log.d("Renew", "isStatusChanged: ${fullGuestInfo.is_paid != oldFullGuestInfo.is_paid}")
+
             dao.renewRentInfo(rents = newRent,
                 isAmountChanged = fullGuestInfo.for_all_nights != oldFullGuestInfo.for_all_nights,
                 isStatusChanged = fullGuestInfo.is_paid != oldFullGuestInfo.is_paid,
@@ -393,7 +397,7 @@ class HomeRepositoryImpl @Inject constructor(
                 currentDate= currentDate
             )
         } else{
-            Log.d("Renew", "Dates  change")
+
             val listOfTracks = ToListOfTracks(
                 startDate=startDate!!,
                 endDate=endDate!!,

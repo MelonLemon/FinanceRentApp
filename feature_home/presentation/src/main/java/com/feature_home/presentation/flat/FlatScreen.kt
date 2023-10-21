@@ -3,6 +3,8 @@ package com.feature_home.presentation.flat
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -60,7 +62,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Month
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FlatScreen(
@@ -171,6 +173,7 @@ fun FlatScreen(
                                 }
                             ){finResultFlat ->
                                 FinResultFlatCard(
+                                    modifier=Modifier.animateItemPlacement(),
                                     title = Month.of(finResultFlat.month).name,
                                     paidAmount = finResultFlat.paid_amount ?:0,
                                     unpaidAmount = finResultFlat.unpaid_amount ?:0,
@@ -217,6 +220,7 @@ fun FlatScreen(
                     ){ guest ->
                         Log.d("Guests", "start_date: ${guest.start_date}, end_date:${guest.end_date}")
                         GuestCard(
+                            modifier=Modifier.animateItemPlacement(),
                             listInfo = listOf(guest.comment),
                             guestName = guest.name,
                             amount = guest.for_all_nights,
@@ -238,8 +242,9 @@ fun FlatScreen(
 
                 }
 
-                if(!flatState.isIncomeSelected){
-                    item {
+
+                item {
+                    AnimatedVisibility(!flatState.isIncomeSelected){
                         LazyRow(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -265,8 +270,11 @@ fun FlatScreen(
                         }
                     }
 
+                }
 
-                    item {
+
+                item {
+                    AnimatedVisibility(!flatState.isIncomeSelected){
                         MonthYearDisplay(
                             selectedYearMonth = flatState.yearMonth,
                             onBtnClick = {
@@ -275,7 +283,10 @@ fun FlatScreen(
                         )
                     }
 
-                    item{
+                }
+
+                item{
+                    AnimatedVisibility(!flatState.isIncomeSelected){
                         AddValueWidget(
                             onAddBtnClick = {amountString->
                                 val amountInt = amountString.toIntOrNull() ?:0
@@ -285,7 +296,9 @@ fun FlatScreen(
                             }
                         )
                     }
+
                 }
+
                 item{
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
@@ -306,6 +319,7 @@ fun FlatScreen(
                     val icon = if(transaction.isIncome) IncomeCategories.getIncIcon(category.standard_category_id) else
                         ExpensesCategories.getExpIcon(category.standard_category_id)
                     TransactionCard(
+                        modifier=Modifier.animateItemPlacement(),
                         title = category.name,
                         icon = if(icon!=null) ImageVector.vectorResource(id = icon) else Icons.Default.Info,
                         amount = transaction.amount,
@@ -315,7 +329,7 @@ fun FlatScreen(
 
             }
                 //Modal Sheet
-                if(guestModalSheetVisibility){
+                AnimatedVisibility(guestModalSheetVisibility) {
                     ModalBottomSheet(
                         onDismissRequest = {
                             guestModalSheetVisibility = false
@@ -337,7 +351,7 @@ fun FlatScreen(
                 }
 
                 //Dialog
-                if(yearMonthDialogVisibility){
+                AnimatedVisibility(yearMonthDialogVisibility){
                     YearMonthDialog(
                         selectedYearMonth = flatState.yearMonth,
                         onCancel = {

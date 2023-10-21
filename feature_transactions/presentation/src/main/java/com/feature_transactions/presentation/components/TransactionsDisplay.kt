@@ -1,5 +1,6 @@
 package com.feature_transactions.presentation.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +29,7 @@ import com.feature_transactions.domain.model.TransactionListItem
 import java.util.Currency
 import java.util.Locale
 
+@OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.transactionDay(
     title:String,
     listOfItems: List<TransactionListItem>
@@ -47,6 +49,7 @@ fun LazyListScope.transactionDay(
         val icon = if(item.isIncome) IncomeCategories.getIncIcon(item.standard_category_id) else
             ExpensesCategories.getExpIcon(item.standard_category_id)
         TransactionRow(
+            modifier=Modifier.animateItemPlacement(),
             categoryName = item.categoryName,
             comment = item.comment,
             amount = item.amount,

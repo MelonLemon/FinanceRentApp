@@ -2,6 +2,7 @@ package com.feature_transactions.presentation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -178,8 +179,8 @@ fun TransactionScreen(
                 }
             }
         }
-        
-        if(filterModalSheetVisibility){
+
+        AnimatedVisibility(filterModalSheetVisibility){
             ModalBottomSheet(
                 onDismissRequest = { filterModalSheetVisibility = false },
                 sheetState = sheetState

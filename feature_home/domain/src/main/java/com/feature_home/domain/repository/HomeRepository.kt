@@ -31,7 +31,7 @@ interface HomeRepository {
                               month: Int
     ):List<SectionInfo>
     suspend fun addTransaction(sectionId: Int, currency_name: String, transaction: TransactionInfo, year: Int,
-                               month: Int):List<SectionInfo>
+                               month: Int, listOfSections:List<SectionInfo>):List<SectionInfo>
     suspend fun getFinResults(): FinState
     suspend fun getFlatsInfo():List<FlatInfo>
     suspend fun getBlockNameById(blockId: Int):String
