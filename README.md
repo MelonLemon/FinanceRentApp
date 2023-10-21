@@ -4,12 +4,16 @@ Helps track rent out income/expenses and others income/expenses
 
 # Screenrecorder, Redmi Xiaomi
 
-https://github.com/MelonLemon/FinanceRentApp/assets/26432711/1a0a6fd5-cb73-42e7-a97c-64fc9d7dc912
+https://github.com/MelonLemon/FinanceRentApp/assets/26432711/a0ca8625-cbc4-43fc-a5e1-256f91907b2f
 
 # Modularization
 App has 3 feature: Home, Transactions and Analytics.  As we could see in scheme App is following Clean Architecture rules. All of them have 2 layers domain and presentation.
 I created di's (dagger-hilt)  in :core:data and :feature_home:domain:, :feature_transactions:domain to connect data.
 ![rent_diagram](https://github.com/MelonLemon/FinanceRentApp/assets/26432711/2cf358a3-c6f9-4eb2-8a28-024d6cff59c6)
+
+
+
+
 
 # Database
 I used room(sqlite database). Tables for database I placed in :core:data module. That's way implementation of database do not depend on domain or presentation layer.
