@@ -9,9 +9,8 @@ https://github.com/MelonLemon/FinanceRentApp/assets/26432711/a0ca8625-cbc4-43fc-
 # Modularization
 App has 3 feature: Home, Transactions and Analytics.  As we could see in scheme App is following Clean Architecture rules. All of them have 2 layers domain and presentation.
 I created di's (dagger-hilt)  in :core:data and :feature_home:domain:, :feature_transactions:domain to connect data.
-![rent_diagram](https://github.com/MelonLemon/FinanceRentApp/assets/26432711/2cf358a3-c6f9-4eb2-8a28-024d6cff59c6)
 
-
+![rent_diagram](https://github.com/MelonLemon/FinanceRentApp/assets/26432711/52fddcaf-95ac-421f-8305-661ce919f780)
 
 
 
@@ -20,7 +19,8 @@ I used room(sqlite database). Tables for database I placed in :core:data module.
 Meanwhile, ui_model(business logic) - data classes - I placed in domain layer. 
 That's way we can change data layer independently - change from one implementation to another 
 or changing ui_models mostly will lead to change in queries rather models scheme of database. 
-![rent db diagram](https://github.com/MelonLemon/FinanceRentApp/assets/26432711/2aa45e03-caf6-4836-a523-2638f6598549)
+![rent db diagram](https://github.com/MelonLemon/FinanceRentApp/assets/26432711/5a1072ef-56a4-4bd1-a948-58e3beb3447b)
+
 
 # Navigation
 For each feature we create seperate Navigation Graph. In Presentation layer we create extention of NavGraph where we implement all navigation inside one feature(between screens of 1 feature).
